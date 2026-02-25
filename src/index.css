@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap");
-/*@import "tailwindcss";*/
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
@@ -20,8 +19,14 @@
     }
 }
 
+@theme {
+    --color-primary: rgba(36, 39, 58, 1);
+    --color-primary-tint: rgba(36, 39, 58, 0.5);
+}
+
 .mdxeditor,
 .mdxeditor * {
     font-family: "Cascadia Mono", monospace;
     color: white;
+    margin-top: 0;
 }

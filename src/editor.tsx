@@ -14,20 +14,17 @@ function Editor() {
 
   return (
     <>
-      <div className="">
-        <MDXEditor
-          className=""
-          markdown={markdown}
-          onChange={setMarkdown}
-          plugins={[
-            headingsPlugin(),
-            listsPlugin(),
-            quotePlugin(),
-            thematicBreakPlugin(),
-            markdownShortcutPlugin(),
-          ]}
-        />
-      </div>
+      <MDXEditor
+        markdown={markdown}
+        onChange={setMarkdown}
+        plugins={[
+          headingsPlugin(),
+          listsPlugin(),
+          quotePlugin(),
+          thematicBreakPlugin(),
+          markdownShortcutPlugin(),
+        ]}
+      />
     </>
   );
 }

@@ -15,7 +15,8 @@
         "title": "KyNote",
         "width": 1000,
         "height": 550,
-        "transparent": true
+        "transparent": true,
+        "decorations": false
       }
     ],
     "security": {
