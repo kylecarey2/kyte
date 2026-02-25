@@ -1,9 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import Editor from "./editor";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <h1 className="text-5xl text-red-500">Hello</h1>
+    <Editor />
   </React.StrictMode>,
 );

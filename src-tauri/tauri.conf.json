@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ezmd",
+  "productName": "kynote",
   "version": "0.1.0",
-  "identifier": "com.ezmd.app",
+  "identifier": "com.kynote.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "EZMD",
-        "width": 800,
-        "height": 600,
+        "title": "KyNote",
+        "width": 1000,
+        "height": 550,
         "transparent": true
       }
     ],

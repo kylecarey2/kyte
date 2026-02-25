@@ -1,11 +1,27 @@
 @import url("https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap");
-@import "tailwindcss";
+/*@import "tailwindcss";*/
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 
-html,
-body,
-#root {
-    height: 100vh;
-    margin: 0;
-    padding: 0;
+@layer base {
+    html,
+    body,
+    #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    body {
+        font-family: "Cascadia Mono", monospace;
+    }
+}
+
+.mdxeditor,
+.mdxeditor * {
     font-family: "Cascadia Mono", monospace;
+    color: white;
 }
