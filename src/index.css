@@ -7,11 +7,10 @@
     html,
     body,
     #root {
-        height: 100%;
         width: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
+        overflow-x: hidden;
     }
 
     body {
@@ -21,12 +20,28 @@
 
 @theme {
     --color-primary: rgba(36, 39, 58, 1);
-    --color-primary-tint: rgba(36, 39, 58, 0.5);
+    --color-primary-tint: rgba(36, 39, 58, 0.75);
 }
 
-.mdxeditor,
-.mdxeditor * {
-    font-family: "Cascadia Mono", monospace;
-    color: white;
-    margin-top: 0;
+::selection {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: none;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: var(--color-slate-500);
+    border-radius: 5px 5px 5px 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-slate-600);
 }

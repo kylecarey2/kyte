@@ -1,0 +1,43 @@
+@import url("https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap");
+
+/*
+    Override mdxeditor styling to achieve custom styling in this file
+*/
+
+.mdxeditor {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Important: must take full height of its parent */
+}
+
+.selectableEditor {
+    overflow-y: auto;
+    padding-top: 0;
+    height: 92vh;
+}
+
+.mdxeditor,
+.mdxeditor * {
+    font-family: "Cascadia Mono", monospace;
+    color: white;
+}
+
+/* Override mdxeditor styling for selection of a <hr> component */
+.mdxeditor hr.selected {
+    outline: 4px solid rgba(100, 100, 100, 0.5) !important;
+}
+
+.mdxeditor code span {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.mdxeditor code span::selection {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.mdxeditor blockquote {
+    color: red;
+    border-left: 4px solid rgba(255, 255, 255, 0.2);
+    padding-left: 16px;
+}

@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import Editor from "./editor";
+import Editor from "./components/editor";
 import { useState, useEffect, useRef } from "react";
 
 function App() {
@@ -46,13 +46,16 @@ function App() {
 
   return (
     <div
-      className={`${focused ? "bg-primary-tint" : "bg-primary"} transition-colors duration-200 h-full`}
+      className={`${focused ? "bg-primary-tint" : "bg-primary"} transition-colors duration-100 flex flex-col h-screen`}
     >
       <div
         data-tauri-drag-region
+        onContextMenu={(e) => e.preventDefault()}
         className="flex flex-row justify-between items-center border-b-2 border-slate-600"
       >
-        <p className="text-white ml-2 m-0">KyNote</p>
+        <p data-tauri-drag-region className="text-white ml-2 m-0 select-none">
+          KyNote
+        </p>
         <div className="flex flex-row">
           <svg
             onClick={minimize}
@@ -83,7 +86,9 @@ function App() {
           </svg>
         </div>
       </div>
-      <Editor />
+      <div className="flex-1 overflow-y-auto">
+        <Editor />
+      </div>
     </div>
   );
 }
