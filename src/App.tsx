@@ -54,7 +54,7 @@ function App() {
         className="flex flex-row justify-between items-center border-b-2 border-slate-600"
       >
         <p data-tauri-drag-region className="text-white ml-2 m-0 select-none">
-          KyNote
+          Kyte
         </p>
         <div className="flex flex-row">
           <svg
