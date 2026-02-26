@@ -11,6 +11,7 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
+        overscroll-behavior-y: none;
     }
 
     body {
@@ -44,4 +45,8 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-slate-600);
+}
+
+::spelling-error {
+    text-decoration: none;
 }
