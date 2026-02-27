@@ -19,7 +19,7 @@ function Editor() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isUnsaved, setIsUnsaved] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
-  const path = "../tmp.md";
+  const path = "../md/tmp.md";
 
   useEffect(() => {
     const fetchData = async () => {
