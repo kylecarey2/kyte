@@ -44,3 +44,7 @@
     margin-left: 0;
     font-style: italic;
 }
+
+.mdxeditor a span {
+    cursor: pointer;
+}
