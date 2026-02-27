@@ -45,6 +45,7 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-slate-600);
+    cursor: default;
 }
 
 ::spelling-error {
