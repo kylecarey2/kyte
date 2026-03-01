@@ -13,7 +13,7 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
   const [offset, setOffset] = useState<number>(0);
   const shownNumber = 5;
 
@@ -50,7 +50,7 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
       files.filter((file) => file.name.toLowerCase().includes(queryLower)),
     );
     setSearchQuery(query);
-    setHighlightedIndex(-1);
+    setHighlightedIndex(filteredFiles.length ? 0 : -1);
     setOffset(0); // reset offset on search
   };
 
@@ -60,7 +60,7 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
     // Calculate the absolute index in the entire list to properly calculate boundaries
     const absoluteIndex = offset + highlightedIndex;
 
-    if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown" || e.key === "Tab") {
       e.preventDefault();
 
       if (absoluteIndex >= filteredFiles.length - 1) {
@@ -98,7 +98,7 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
       }
     }
 
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Enter") {
       // Allow typing a space in the search bar if nothing is highlighted yet
       if (highlightedIndex === -1) return;
 
@@ -111,11 +111,48 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
     }
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    const absoluteIndex = offset + highlightedIndex;
+
+    if (e.deltaY < 0) {
+      if (absoluteIndex <= 0) {
+        // Top of list, clear highlight
+        setHighlightedIndex(-1);
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      } else {
+        if (highlightedIndex > 0) {
+          // Move the highlight up visually
+          setHighlightedIndex((prev) => prev - 1);
+        } else {
+          // Shift window up
+          setOffset((prev) => prev - 1);
+        }
+      }
+    } else {
+      if (absoluteIndex >= filteredFiles.length - 1) {
+        // Very end of list, wrap to top
+        setOffset(0);
+        setHighlightedIndex(0);
+      } else {
+        if (highlightedIndex < shownNumber - 1) {
+          // Move the highlight down
+          setHighlightedIndex((prev) => prev + 1);
+        } else {
+          // Shift window down
+          setOffset((prev) => prev + 1);
+        }
+      }
+    }
+  };
+
   return (
     <div
       id="explorer"
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      onWheel={handleWheel}
       className="h-full text-white overflow-hidden focus:outline-none"
     >
       <input
