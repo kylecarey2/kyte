@@ -1,14 +1,17 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useEffect, useRef, useState } from "react";
 import Editor from "./components/editor";
-import { useState, useEffect, useRef } from "react";
 import Explorer from "./components/explorer";
 import Modal from "./components/Modal";
+import { File } from "./models/File";
 
 function App() {
   const [focused, setFocused] = useState(true);
   const [openExplorer, setOpenExplorer] = useState(true);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appWindow = getCurrentWindow();
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const minimize = () => {
     appWindow.minimize();
@@ -89,12 +92,16 @@ function App() {
           </svg>
         </div>
       </div>
+      <button onClick={() => setOpenExplorer(!openExplorer)}>Explorer</button>
       <Modal isOpen={openExplorer} onClose={() => setOpenExplorer(false)}>
-        <Explorer />
+        <Explorer
+          close={() => setOpenExplorer(false)}
+          onFileSelected={(file: File) => setSelectedFile(file)}
+        />
       </Modal>
 
       <div className="flex-1 overflow-y-auto">
-        <Editor />
+        <Editor file={selectedFile} />
       </div>
     </div>
   );

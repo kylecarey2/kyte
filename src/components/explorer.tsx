@@ -1,18 +1,21 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
+import { File } from "../models/File";
 
-interface File {
-  name: string;
-  path: string;
+interface ExplorerProps {
+  close: () => void;
+  onFileSelected: (file: File) => void;
 }
 
-function Explorer() {
+function Explorer({ close, onFileSelected }: ExplorerProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // this is the "selected file" in terms of ui
   const [filteredFiles, setFilteredFiles] = useState<File[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [offset, setOffset] = useState<number>(0);
+  const shownNumber = 5;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,9 +40,8 @@ function Explorer() {
 
   const handleFileSelect = (file: File, index: number) => {
     setHighlightedIndex(index);
-    setSelectedFile(file);
-    console.log("BACKEND GETS CALLED BY FILE SELECT", file);
-    // invoke rust function to open file
+    onFileSelected(file);
+    close();
   };
 
   const handleSearch = (query: string) => {
@@ -49,29 +51,62 @@ function Explorer() {
     );
     setSearchQuery(query);
     setHighlightedIndex(-1);
+    setOffset(0); // reset offset on search
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (filteredFiles.length === 0) return;
 
+    // Calculate the absolute index in the entire list to properly calculate boundaries
+    const absoluteIndex = offset + highlightedIndex;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setHighlightedIndex((prev) =>
-        prev < filteredFiles.length - 1 ? prev + 1 : prev,
-      );
+
+      if (absoluteIndex >= filteredFiles.length - 1) {
+        // Very end of list, wrap to top
+        setOffset(0);
+        setHighlightedIndex(0);
+      } else {
+        if (highlightedIndex < shownNumber - 1) {
+          // Move the highlight down
+          setHighlightedIndex((prev) => prev + 1);
+        } else {
+          // Shift window down
+          setOffset((prev) => prev + 1);
+        }
+      }
     }
 
     if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+
+      if (absoluteIndex <= 0) {
+        // Top of list, clear highlight
+        setHighlightedIndex(-1);
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      } else {
+        if (highlightedIndex > 0) {
+          // Move the highlight up visually
+          setHighlightedIndex((prev) => prev - 1);
+        } else {
+          // Shift window up
+          setOffset((prev) => prev - 1);
+        }
+      }
     }
 
     if (e.key === "Enter" || e.key === " ") {
+      // Allow typing a space in the search bar if nothing is highlighted yet
+      if (highlightedIndex === -1) return;
+
       e.preventDefault();
-      const file = filteredFiles[highlightedIndex];
+      const file = filteredFiles[absoluteIndex];
       if (file) {
-        // loadFile(file); // call backend here
         console.log("BACKEND GETS CALLED BY ENTER / SPACE", file);
+        handleFileSelect(file, highlightedIndex);
       }
     }
   };
@@ -95,28 +130,41 @@ function Explorer() {
         {filteredFiles.length === 0 ? (
           <p>No files found</p>
         ) : (
-          filteredFiles.map((file, index) => (
-            <li
-              key={file.path}
-              onClick={() => handleFileSelect(file, index)}
-              className={`p-2 rounded-lg ${
-                highlightedIndex === index
-                  ? "bg-slate-500"
-                  : "hover:bg-black/20"
-              } mb-2 cursor-pointer`}
-            >
-              {file.name} &gt;{" "}
-              <span
-                className={
-                  highlightedIndex === index ? "text-primary" : "text-slate-500"
-                }
+          filteredFiles
+            .slice(offset, offset + shownNumber)
+            .map((file, index) => (
+              <li
+                key={file.path}
+                onClick={() => handleFileSelect(file, index)}
+                className={`p-2 rounded-lg ${
+                  highlightedIndex === index
+                    ? "bg-slate-500"
+                    : "hover:bg-black/20"
+                } mb-2 cursor-pointer`}
               >
-                {file.path}
-              </span>
-            </li>
-          ))
+                {file.name} &gt;{" "}
+                <span
+                  className={
+                    highlightedIndex === index
+                      ? "text-primary"
+                      : "text-slate-500"
+                  }
+                >
+                  {file.path}
+                </span>
+              </li>
+            ))
         )}
       </ul>
+      <div className="flex flex-row justify-end">
+        <p className="text-slate-600 my-0">
+          [
+          {shownNumber < filteredFiles.length
+            ? shownNumber + offset
+            : filteredFiles.length}{" "}
+          / {filteredFiles.length}]
+        </p>
+      </div>
     </div>
   );
 }

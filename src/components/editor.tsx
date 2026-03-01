@@ -1,25 +1,32 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import "@mdxeditor/editor/style.css";
-import "./editor.overrides.css";
 import {
-  MDXEditor,
   headingsPlugin,
+  linkPlugin,
   listsPlugin,
+  markdownShortcutPlugin,
+  MDXEditor,
+  MDXEditorMethods,
   quotePlugin,
   thematicBreakPlugin,
-  markdownShortcutPlugin,
-  linkPlugin,
-  MDXEditorMethods,
 } from "@mdxeditor/editor";
+import "@mdxeditor/editor/style.css";
 import { invoke } from "@tauri-apps/api/core";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { File } from "../models/File";
+import "./editor.overrides.css";
 
-function Editor() {
+interface EditorProps {
+  file: File | null;
+}
+
+function Editor({ file }: EditorProps) {
   const [markdown, setMarkdown] = useState("");
   const editor = useRef<MDXEditorMethods>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isUnsaved, setIsUnsaved] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
-  const path = "../md/tmp.md";
+
+  const t_path = file?.path ?? "tmp.md";
+  const path = `../md/${t_path}`;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,6 +37,7 @@ function Editor() {
         console.log(result);
         setMarkdown(result);
         editor.current?.setMarkdown(result);
+        setIsUnsaved(false);
       } catch (error) {
         console.error("Error reading file:", error);
       }
@@ -43,34 +51,37 @@ function Editor() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, []);
+  }, [path]);
 
   // Debounced save handler
-  const handleEditorChange = useCallback((newContent: string) => {
-    // Update the local state immediately
-    setMarkdown(newContent);
-    setIsUnsaved(true);
+  const handleEditorChange = useCallback(
+    (newContent: string) => {
+      // Update the local state immediately
+      setMarkdown(newContent);
+      setIsUnsaved(true);
 
-    // Clear the previous timeout if user still typing
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout to save the file after 500ms of inactivity
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        await invoke("write_file", {
-          path: path,
-          content: newContent,
-        });
-        console.log("File saved automatically!");
-        setIsUnsaved(false);
-        setLastSaved(new Date());
-      } catch (error) {
-        console.error("Error writing file:", error);
+      // Clear the previous timeout if user still typing
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
       }
-    }, 1500);
-  }, []);
+
+      // Set new timeout to save the file after 500ms of inactivity
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          await invoke("write_file", {
+            path: path,
+            content: newContent,
+          });
+          console.log("File saved automatically!");
+          setIsUnsaved(false);
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error("Error writing file:", error);
+        }
+      }, 1500);
+    },
+    [path],
+  );
 
   return (
     <div className="h-full relative">
