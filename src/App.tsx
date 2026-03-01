@@ -1,9 +1,12 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import Editor from "./components/editor";
 import { useState, useEffect, useRef } from "react";
+import Explorer from "./components/explorer";
+import Modal from "./components/Modal";
 
 function App() {
   const [focused, setFocused] = useState(true);
+  const [openExplorer, setOpenExplorer] = useState(true);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appWindow = getCurrentWindow();
 
@@ -51,7 +54,7 @@ function App() {
       <div
         data-tauri-drag-region
         onContextMenu={(e) => e.preventDefault()}
-        className="flex flex-row justify-between items-center border-b-2 border-slate-600"
+        className="flex flex-row justify-between items-center border-b-2 border-slate-600 relative z-51"
       >
         <p data-tauri-drag-region className="text-white ml-2 m-0 select-none">
           Kyte
@@ -86,6 +89,10 @@ function App() {
           </svg>
         </div>
       </div>
+      <Modal isOpen={openExplorer} onClose={() => setOpenExplorer(false)}>
+        <Explorer />
+      </Modal>
+
       <div className="flex-1 overflow-y-auto">
         <Editor />
       </div>

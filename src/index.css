@@ -17,15 +17,15 @@
     body {
         font-family: "Cascadia Mono", monospace;
     }
+
+    ::selection {
+        background-color: rgba(100, 100, 100, 0.5);
+    }
 }
 
 @theme {
     --color-primary: rgba(36, 39, 58, 1);
     --color-primary-tint: rgba(36, 39, 58, 0.75);
-}
-
-::selection {
-    background-color: rgba(100, 100, 100, 0.5);
 }
 
 ::-webkit-scrollbar {
@@ -50,4 +50,8 @@
 
 ::spelling-error {
     text-decoration: none;
+}
+
+.font-cascadia {
+    font-family: "Cascadia Mono", monospace;
 }

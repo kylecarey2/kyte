@@ -12,7 +12,7 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
   return createPortal(
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center z-50"
+      className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center z-50 mt-10"
     >
       <div
         onClick={(e) => e.stopPropagation()}
