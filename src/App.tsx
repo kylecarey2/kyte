@@ -41,12 +41,34 @@ function App() {
       setFocused(true);
     });
 
+    // Keydown event listener
+    const openExplorerKeydown = (e: KeyboardEvent) => {
+      const isModifierKey = e.ctrlKey || e.metaKey;
+      if (isModifierKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        setOpenExplorer((prev) => !prev);
+      }
+    };
+
+    const closeModalKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenExplorer(false);
+      }
+    };
+
+    window.addEventListener("keydown", openExplorerKeydown);
+    window.addEventListener("keydown", closeModalKeydown);
+
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
       unlistenBlur.then((f) => f());
       unlistenFocus.then((f) => f());
+
+      // Remove keyboard event listener
+      window.removeEventListener("keydown", openExplorerKeydown);
+      window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
 
@@ -92,7 +114,7 @@ function App() {
           </svg>
         </div>
       </div>
-      <button onClick={() => setOpenExplorer(!openExplorer)}>Explorer</button>
+
       <Modal isOpen={openExplorer} onClose={() => setOpenExplorer(false)}>
         <Explorer
           close={() => setOpenExplorer(false)}
