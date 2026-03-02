@@ -116,6 +116,13 @@ fn create_file(filename: &str) -> Result<String, String> {
     Ok(full_path.to_string_lossy().to_string())
 }
 
+#[tauri::command]
+fn delete_file(path: &str) -> Result<(), String> {
+    let full_path = get_base_dir()?.join(path);
+    std::fs::remove_file(full_path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -125,7 +132,8 @@ pub fn run() {
             write_file,
             list_files,
             list_dirs,
-            create_file
+            create_file,
+            delete_file,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
