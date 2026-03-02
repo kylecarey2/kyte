@@ -147,7 +147,6 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
 
   return (
     <div
-      id="explorer"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}

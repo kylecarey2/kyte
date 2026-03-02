@@ -148,7 +148,6 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
 
   return (
     <div
-      id="explorer"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}
