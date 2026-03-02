@@ -25,14 +25,13 @@ function Editor({ file }: EditorProps) {
   const [isUnsaved, setIsUnsaved] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
 
-  const t_path = file?.path ?? "tmp.md";
-  const path = `../md/${t_path}`;
+  const path = file?.path ?? "tmp.md";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result: string = await invoke("read_file", {
-          path: path,
+          filename: path,
         });
         console.log(result);
         setMarkdown(result);
@@ -69,7 +68,7 @@ function Editor({ file }: EditorProps) {
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           await invoke("write_file", {
-            path: path,
+            filename: path,
             content: newContent,
           });
           console.log("File saved automatically!");

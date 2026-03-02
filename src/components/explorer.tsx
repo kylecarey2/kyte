@@ -20,9 +20,7 @@ function Explorer({ close, onFileSelected }: ExplorerProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result: File[] = await invoke("list_files", {
-          path: "../md",
-        });
+        const result: File[] = await invoke("list_files");
 
         setFilteredFiles(result);
         setFiles(result);
