@@ -4,12 +4,16 @@ import Editor from "./components/editor";
 import Explorer from "./components/explorer";
 import Modal from "./components/Modal";
 import { File } from "./models/File";
+import NewNote from "./components/New";
 
 function App() {
   const [focused, setFocused] = useState(true);
-  const [openExplorer, setOpenExplorer] = useState(true);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appWindow = getCurrentWindow();
+
+  let isModalOpen = false;
+  const [openExplorer, setOpenExplorer] = useState(false);
+  const [openNewNote, setOpenNewNote] = useState(true);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -46,17 +50,34 @@ function App() {
       const isModifierKey = e.ctrlKey || e.metaKey;
       if (isModifierKey && e.key.toLowerCase() === "p") {
         e.preventDefault();
-        setOpenExplorer((prev) => !prev);
+        if (!isModalOpen) {
+          isModalOpen = true;
+          setOpenExplorer((prev) => !prev);
+        }
+      }
+    };
+
+    const openNewNoteKeydown = (e: KeyboardEvent) => {
+      const isModifierKey = e.ctrlKey || e.metaKey;
+      if (isModifierKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        if (!isModalOpen) {
+          isModalOpen = true;
+          setOpenNewNote((prev) => !prev);
+        }
       }
     };
 
     const closeModalKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        isModalOpen = false;
         setOpenExplorer(false);
+        setOpenNewNote(false);
       }
     };
 
     window.addEventListener("keydown", openExplorerKeydown);
+    window.addEventListener("keydown", openNewNoteKeydown);
     window.addEventListener("keydown", closeModalKeydown);
 
     return () => {
@@ -68,6 +89,7 @@ function App() {
 
       // Remove keyboard event listener
       window.removeEventListener("keydown", openExplorerKeydown);
+      window.removeEventListener("keydown", openNewNoteKeydown);
       window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
@@ -119,6 +141,13 @@ function App() {
         <Explorer
           close={() => setOpenExplorer(false)}
           onFileSelected={(file: File) => setSelectedFile(file)}
+        />
+      </Modal>
+
+      <Modal isOpen={openNewNote} onClose={() => setOpenNewNote(false)}>
+        <NewNote
+          close={() => setOpenNewNote(false)}
+          onFileCreated={(file: File) => setSelectedFile(file)}
         />
       </Modal>
 
