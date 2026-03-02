@@ -5,6 +5,7 @@ import Explorer from "./components/explorer";
 import Modal from "./components/Modal";
 import { File } from "./models/File";
 import NewNote from "./components/New";
+import DeleteNote from "./components/Delete";
 
 function App() {
   const [focused, setFocused] = useState(true);
@@ -13,7 +14,8 @@ function App() {
 
   let isModalOpen = false;
   const [openExplorer, setOpenExplorer] = useState(false);
-  const [openNewNote, setOpenNewNote] = useState(true);
+  const [openNewNote, setOpenNewNote] = useState(false);
+  const [openDeleteNote, setOpenDeleteNote] = useState(true);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -50,10 +52,7 @@ function App() {
       const isModifierKey = e.ctrlKey || e.metaKey;
       if (isModifierKey && e.key.toLowerCase() === "p") {
         e.preventDefault();
-        if (!isModalOpen) {
-          isModalOpen = true;
-          setOpenExplorer((prev) => !prev);
-        }
+        setOpenExplorer((prev) => !prev);
       }
     };
 
@@ -61,23 +60,29 @@ function App() {
       const isModifierKey = e.ctrlKey || e.metaKey;
       if (isModifierKey && e.key.toLowerCase() === "n") {
         e.preventDefault();
-        if (!isModalOpen) {
-          isModalOpen = true;
-          setOpenNewNote((prev) => !prev);
-        }
+        setOpenNewNote((prev) => !prev);
+      }
+    };
+
+    const openDeleteNoteKeydown = (e: KeyboardEvent) => {
+      const isModifierKey = e.ctrlKey || e.metaKey;
+      if (isModifierKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        setOpenDeleteNote((prev) => !prev);
       }
     };
 
     const closeModalKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        isModalOpen = false;
         setOpenExplorer(false);
         setOpenNewNote(false);
+        setOpenDeleteNote(false);
       }
     };
 
     window.addEventListener("keydown", openExplorerKeydown);
     window.addEventListener("keydown", openNewNoteKeydown);
+    window.addEventListener("keydown", openDeleteNoteKeydown);
     window.addEventListener("keydown", closeModalKeydown);
 
     return () => {
@@ -90,6 +95,7 @@ function App() {
       // Remove keyboard event listener
       window.removeEventListener("keydown", openExplorerKeydown);
       window.removeEventListener("keydown", openNewNoteKeydown);
+      window.removeEventListener("keydown", openDeleteNoteKeydown);
       window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
@@ -148,6 +154,14 @@ function App() {
         <NewNote
           close={() => setOpenNewNote(false)}
           onFileCreated={(file: File) => setSelectedFile(file)}
+        />
+      </Modal>
+
+      <Modal isOpen={openDeleteNote} onClose={() => setOpenDeleteNote(false)}>
+        <DeleteNote
+          close={() => setOpenDeleteNote(false)}
+          onFileDeleted={() => setSelectedFile(null)}
+          currentFile={selectedFile!}
         />
       </Modal>
 
