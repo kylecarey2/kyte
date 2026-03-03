@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { File } from "../models/File";
+import { File } from "../../models/File";
 import { invoke } from "@tauri-apps/api/core";
 
 interface DeleteNoteProps {

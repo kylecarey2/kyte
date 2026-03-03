@@ -1,11 +1,12 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState } from "react";
-import Editor from "./components/editor";
+import Editor from "./components/Editor";
 import Explorer from "./components/explorer";
 import Modal from "./components/Modal";
 import { File } from "./models/File";
-import NewNote from "./components/New";
-import DeleteNote from "./components/Delete";
+import NewNote from "./components/notes/NewNote";
+import DeleteNote from "./components/notes/DeleteNote";
+import GetStarted from "./components/GetStarted";
 
 function App() {
   const [focused, setFocused] = useState(true);
@@ -15,7 +16,7 @@ function App() {
   let isModalOpen = false;
   const [openExplorer, setOpenExplorer] = useState(false);
   const [openNewNote, setOpenNewNote] = useState(false);
-  const [openDeleteNote, setOpenDeleteNote] = useState(true);
+  const [openDeleteNote, setOpenDeleteNote] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -165,9 +166,18 @@ function App() {
         />
       </Modal>
 
-      <div className="flex-1 overflow-y-auto">
-        <Editor file={selectedFile} />
-      </div>
+      {selectedFile ? (
+        <div className="flex-1 overflow-y-auto">
+          <Editor file={selectedFile} />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center mb-10 selection:bg-transparent cursor-default">
+          <GetStarted
+            openExplorer={() => setOpenExplorer(true)}
+            openNewNote={() => setOpenNewNote(true)}
+          />
+        </div>
+      )}
     </div>
   );
 }
