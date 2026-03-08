@@ -1,12 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
 import { useState, useRef, useEffect } from "react";
 
 interface DeleteFolderProps {
-  close: () => void;
+  folders: string[];
+  onFolderSelected: (folder: string) => void;
 }
 
-function DeleteFolder({ close }: DeleteFolderProps) {
-  const [dirs, setDirs] = useState<string[]>([]);
+function DeleteFolder({ folders, onFolderSelected }: DeleteFolderProps) {
+  const [dirs, setDirs] = useState<string[]>(folders);
   const [shownDirs, setShownDirs] = useState<string[]>([]);
   const [folderName, setFolderName] = useState("");
   const folderNameRef = useRef<HTMLInputElement>(null);
@@ -16,17 +16,8 @@ function DeleteFolder({ close }: DeleteFolderProps) {
   const shownNumber = 5;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result: string[] = await invoke("list_dirs");
-        setDirs(result);
-        setShownDirs(result);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
+    setDirs(folders);
+    setShownDirs(folders);
 
     if (folderNameRef.current) {
       folderNameRef.current.focus();
@@ -35,23 +26,7 @@ function DeleteFolder({ close }: DeleteFolderProps) {
 
   const handleDirSelect = (dir: string, index: number) => {
     setHighlightedIndex(index);
-    const create = async () => {
-      let result: string;
-      try {
-        result = await invoke("delete_directory", {
-          dirname: dir,
-        });
-      } catch (error) {
-        console.error(error);
-        return;
-      }
-
-      console.log(result);
-      close();
-    };
-
-    create();
-
+    onFolderSelected(dir);
     console.log(dir);
   };
 
@@ -206,7 +181,7 @@ function DeleteFolder({ close }: DeleteFolderProps) {
             )
           }
         >
-          Create
+          Delete
         </button>
       </div>
     </div>

@@ -3,9 +3,10 @@ import { useState, useRef, useEffect } from "react";
 
 interface NewFolderProps {
   close: () => void;
+  folders: string[];
 }
 
-function NewFolder({ close }: NewFolderProps) {
+function NewFolder({ close, folders }: NewFolderProps) {
   const [dirs, setDirs] = useState<string[]>([]);
   const [folderName, setFolderName] = useState("");
   const folderNameRef = useRef<HTMLInputElement>(null);
@@ -15,17 +16,7 @@ function NewFolder({ close }: NewFolderProps) {
   const shownNumber = 5;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result: string[] = await invoke("list_dirs");
-        setDirs(result);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
-
+    setDirs(folders);
     if (folderNameRef.current) {
       folderNameRef.current.focus();
     }
