@@ -7,7 +7,7 @@ import { File } from "./models/File";
 import NewNote from "./components/notes/NewNote";
 import DeleteNote from "./components/notes/DeleteNote";
 import GetStarted from "./components/GetStarted";
-import NewFolder from "./components/folders/NewFolder";
+import FolderControl from "./components/folders/FolderControl";
 
 function App() {
   const [focused, setFocused] = useState(true);
@@ -18,7 +18,7 @@ function App() {
   const [openExplorer, setOpenExplorer] = useState(false);
   const [openNewNote, setOpenNewNote] = useState(false);
   const [openDeleteNote, setOpenDeleteNote] = useState(false);
-  const [openNewFolder, setOpenNewFolder] = useState(true);
+  const [openFolderControl, setOpenFolderControl] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -61,7 +61,7 @@ function App() {
 
     const openNewNoteKeydown = (e: KeyboardEvent) => {
       const isModifierKey = e.ctrlKey || e.metaKey;
-      if (isModifierKey && e.key.toLowerCase() === "n") {
+      if (isModifierKey && !e.shiftKey && e.key.toLowerCase() === "n") {
         e.preventDefault();
         setOpenNewNote((prev) => !prev);
       }
@@ -75,11 +75,11 @@ function App() {
       }
     };
 
-    const openNewFolderKeydown = (e: KeyboardEvent) => {
+    const openFolderControlKeydown = (e: KeyboardEvent) => {
       const isModifierKey = e.ctrlKey || e.metaKey;
-      if (isModifierKey && e.key.toLowerCase() === "o") {
+      if (isModifierKey && e.shiftKey && e.key.toLowerCase() === "n") {
         e.preventDefault();
-        setOpenNewFolder((prev) => !prev);
+        setOpenFolderControl((prev) => !prev);
       }
     };
 
@@ -88,14 +88,14 @@ function App() {
         setOpenExplorer(false);
         setOpenNewNote(false);
         setOpenDeleteNote(false);
-        setOpenNewFolder(false);
+        setOpenFolderControl(false);
       }
     };
 
     window.addEventListener("keydown", openExplorerKeydown);
     window.addEventListener("keydown", openNewNoteKeydown);
     window.addEventListener("keydown", openDeleteNoteKeydown);
-    window.addEventListener("keydown", openNewFolderKeydown);
+    window.addEventListener("keydown", openFolderControlKeydown);
     window.addEventListener("keydown", closeModalKeydown);
 
     return () => {
@@ -109,7 +109,7 @@ function App() {
       window.removeEventListener("keydown", openExplorerKeydown);
       window.removeEventListener("keydown", openNewNoteKeydown);
       window.removeEventListener("keydown", openDeleteNoteKeydown);
-      window.removeEventListener("keydown", openNewFolderKeydown);
+      window.removeEventListener("keydown", openFolderControlKeydown);
       window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
@@ -179,8 +179,11 @@ function App() {
         />
       </Modal>
 
-      <Modal isOpen={openNewFolder} onClose={() => setOpenNewFolder(false)}>
-        <NewFolder close={() => setOpenNewFolder(false)} />
+      <Modal
+        isOpen={openFolderControl}
+        onClose={() => setOpenFolderControl(false)}
+      >
+        <FolderControl close={() => setOpenFolderControl(false)} />
       </Modal>
 
       {selectedFile ? (
