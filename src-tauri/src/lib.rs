@@ -102,6 +102,10 @@ fn create_file(filename: &str) -> Result<String, String> {
         resolved_name.push_str(".md");
     }
 
+    if resolved_name.starts_with('/') {
+        resolved_name = resolved_name.trim_start_matches('/').to_string();
+    }
+
     full_path.push(&resolved_name);
 
     // Check if file already exists
@@ -109,7 +113,11 @@ fn create_file(filename: &str) -> Result<String, String> {
         return Err(format!("File '{}' already exists", resolved_name));
     }
 
-    let content = format!("# {}", filename.trim());
+    let nice_filename = &filename[filename
+        .rfind(|c| c == '/' || c == '\\')
+        .map_or(0, |i| i + 1)..];
+
+    let content = format!("# {}", nice_filename.trim());
 
     let _ = fs::write(&full_path, content).map_err(|e| e.to_string());
 
@@ -123,6 +131,37 @@ fn delete_file(path: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn create_directory(dirname: &str) -> Result<String, String> {
+    let mut full_path = get_base_dir()?;
+
+    // Trim and sanitize
+    let mut resolved_name = dirname.trim().replace(" ", "-");
+
+    if resolved_name.is_empty() {
+        return Err("Directory name cannot be empty".into());
+    }
+
+    if resolved_name.contains("..") {
+        return Err("Invalid directory name".into());
+    }
+
+    if resolved_name.starts_with('/') {
+        resolved_name = resolved_name.trim_start_matches('/').to_string();
+    }
+
+    full_path.push(&resolved_name);
+
+    // Check if directory already exists
+    if full_path.exists() {
+        return Err(format!("Directory '{}' already exists", resolved_name));
+    }
+
+    fs::create_dir_all(&full_path).map_err(|e| e.to_string())?;
+
+    Ok(full_path.to_string_lossy().to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -134,6 +173,7 @@ pub fn run() {
             list_dirs,
             create_file,
             delete_file,
+            create_directory
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
