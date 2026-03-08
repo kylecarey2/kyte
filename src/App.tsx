@@ -1,12 +1,13 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState } from "react";
 import Editor from "./components/Editor";
-import Explorer from "./components/explorer";
+import Explorer from "./components/Explorer";
 import Modal from "./components/Modal";
 import { File } from "./models/File";
 import NewNote from "./components/notes/NewNote";
 import DeleteNote from "./components/notes/DeleteNote";
 import GetStarted from "./components/GetStarted";
+import NewFolder from "./components/folders/NewFolder";
 
 function App() {
   const [focused, setFocused] = useState(true);
@@ -17,6 +18,7 @@ function App() {
   const [openExplorer, setOpenExplorer] = useState(false);
   const [openNewNote, setOpenNewNote] = useState(false);
   const [openDeleteNote, setOpenDeleteNote] = useState(false);
+  const [openNewFolder, setOpenNewFolder] = useState(true);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -73,17 +75,27 @@ function App() {
       }
     };
 
+    const openNewFolderKeydown = (e: KeyboardEvent) => {
+      const isModifierKey = e.ctrlKey || e.metaKey;
+      if (isModifierKey && e.key.toLowerCase() === "o") {
+        e.preventDefault();
+        setOpenNewFolder((prev) => !prev);
+      }
+    };
+
     const closeModalKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpenExplorer(false);
         setOpenNewNote(false);
         setOpenDeleteNote(false);
+        setOpenNewFolder(false);
       }
     };
 
     window.addEventListener("keydown", openExplorerKeydown);
     window.addEventListener("keydown", openNewNoteKeydown);
     window.addEventListener("keydown", openDeleteNoteKeydown);
+    window.addEventListener("keydown", openNewFolderKeydown);
     window.addEventListener("keydown", closeModalKeydown);
 
     return () => {
@@ -97,6 +109,7 @@ function App() {
       window.removeEventListener("keydown", openExplorerKeydown);
       window.removeEventListener("keydown", openNewNoteKeydown);
       window.removeEventListener("keydown", openDeleteNoteKeydown);
+      window.removeEventListener("keydown", openNewFolderKeydown);
       window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
@@ -164,6 +177,10 @@ function App() {
           onFileDeleted={() => setSelectedFile(null)}
           currentFile={selectedFile!}
         />
+      </Modal>
+
+      <Modal isOpen={openNewFolder} onClose={() => setOpenNewFolder(false)}>
+        <NewFolder close={() => setOpenNewFolder(false)} />
       </Modal>
 
       {selectedFile ? (

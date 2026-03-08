@@ -1,16 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState } from "react";
-import { File } from "../../models/File";
+import { useState, useRef, useEffect } from "react";
 
-interface NewNoteProps {
+interface NewFolderProps {
   close: () => void;
-  onFileCreated: (file: File) => void;
 }
 
-function NewNote({ close, onFileCreated }: NewNoteProps) {
+function NewFolder({ close }: NewFolderProps) {
   const [dirs, setDirs] = useState<string[]>([]);
-  const [fileName, setFileName] = useState("");
-  const fileNameRef = useRef<HTMLInputElement>(null);
+  const [folderName, setFolderName] = useState("");
+  const folderNameRef = useRef<HTMLInputElement>(null);
 
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
   const [offset, setOffset] = useState<number>(0);
@@ -28,8 +26,8 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
 
     fetchData();
 
-    if (fileNameRef.current) {
-      fileNameRef.current.focus();
+    if (folderNameRef.current) {
+      folderNameRef.current.focus();
     }
   }, []);
 
@@ -38,8 +36,8 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
     const create = async () => {
       let result: string;
       try {
-        result = await invoke("create_file", {
-          filename: `${dir}/${fileName}`,
+        result = await invoke("create_directory", {
+          dirname: `${dir}/${folderName}`,
         });
       } catch (error) {
         console.error(error);
@@ -47,13 +45,12 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       }
 
       console.log(result);
-      onFileCreated({ name: fileName, path: result });
       close();
     };
 
     create();
 
-    console.log(`${dir}/${fileName}`);
+    console.log(`${dir}/${folderName}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -86,8 +83,8 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       if (absoluteIndex <= 0) {
         // Top of list, clear highlight
         setHighlightedIndex(-1);
-        if (fileNameRef.current) {
-          fileNameRef.current.focus();
+        if (folderNameRef.current) {
+          folderNameRef.current.focus();
         }
       } else {
         if (highlightedIndex > 0) {
@@ -105,8 +102,8 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       if (highlightedIndex === -1) return;
 
       e.preventDefault();
-      const file = dirs[absoluteIndex];
-      handleDirSelect(file, highlightedIndex); // had if(file) statement, but would not work. need a custom type for root dir so it isnt empty
+      const dir = dirs[absoluteIndex];
+      handleDirSelect(dir, highlightedIndex);
     }
   };
 
@@ -117,8 +114,8 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       if (absoluteIndex <= 0) {
         // Top of list, clear highlight
         setHighlightedIndex(-1);
-        if (fileNameRef.current) {
-          fileNameRef.current.focus();
+        if (folderNameRef.current) {
+          folderNameRef.current.focus();
         }
       } else {
         if (highlightedIndex > 0) {
@@ -154,12 +151,12 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       className="h-full text-white overflow-hidden focus:outline-none"
     >
       <input
-        ref={fileNameRef}
+        ref={folderNameRef}
         className="w-full mb-2 bg-transparent border-0 border-b-2 border-slate-500 placeholder-slate-500 h-8 focus:outline-none font-cascadia text-lg text-white"
         type="text"
-        placeholder="Create file name..."
-        value={fileName}
-        onChange={(e) => setFileName(e.target.value)}
+        placeholder="Enter folder name..."
+        value={folderName}
+        onChange={(e) => setFolderName(e.target.value)}
       ></input>
       <ul className="list-none p-0 m-0 selection:bg-transparent selection:text-inherit">
         {dirs.length === 0 ? (
@@ -205,4 +202,4 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
   );
 }
 
-export default NewNote;
+export default NewFolder;
