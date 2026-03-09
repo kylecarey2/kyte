@@ -13,6 +13,14 @@ struct File {
     name: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct FileNode {
+    name: String,
+    path: String,
+    is_dir: bool,
+    children: Option<Vec<FileNode>>,
+}
+
 fn get_base_dir() -> Result<PathBuf, String> {
     let mut path = std::env::current_dir().map_err(|e| e.to_string())?;
     path.push(BASE_DIR);
@@ -169,6 +177,60 @@ fn delete_directory(dirname: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn get_file_tree() -> Result<FileNode, String> {
+    let path = get_base_dir()?;
+    build_tree(path).map_err(|e| e.to_string())
+}
+
+fn build_tree(path: PathBuf) -> Result<FileNode, std::io::Error> {
+    // Get file/folder name
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| path.to_string_lossy().into_owned());
+
+    let path_str = path.to_string_lossy().into_owned();
+    let is_dir = path.is_dir();
+
+    let mut children = None;
+
+    if is_dir {
+        let mut dir_children = Vec::new();
+        for entry in fs::read_dir(&path)? {
+            let entry = entry?;
+            let child_path = entry.path();
+
+            // Ignore hidden files/folders
+            if let Some(file_name) = child_path.file_name() {
+                if file_name.to_string_lossy().starts_with('.') {
+                    continue;
+                }
+            }
+
+            if let Ok(child_node) = build_tree(child_path) {
+                dir_children.push(child_node);
+            }
+        }
+
+        // Sort so directories appear at the top followed by files (alphabetically)
+        dir_children.sort_by(|a, b| {
+            b.is_dir
+                .cmp(&a.is_dir)
+                .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+        });
+
+        children = Some(dir_children);
+    }
+
+    Ok(FileNode {
+        name,
+        path: path_str,
+        is_dir,
+        children,
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -181,7 +243,8 @@ pub fn run() {
             create_file,
             delete_file,
             create_directory,
-            delete_directory
+            delete_directory,
+            get_file_tree,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
