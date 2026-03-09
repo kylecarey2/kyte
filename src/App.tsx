@@ -1,13 +1,14 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState } from "react";
 import Editor from "./components/Editor";
-import Explorer from "./components/Explorer";
+import QuickPick from "./components/QuickPick";
 import Modal from "./components/Modal";
 import { File } from "./models/File";
 import NewNote from "./components/notes/NewNote";
 import DeleteNote from "./components/notes/DeleteNote";
 import GetStarted from "./components/GetStarted";
 import FolderControl from "./components/folders/FolderControl";
+import FileExplorer from "./components/explorer/FileExplorer";
 
 function App() {
   const [focused, setFocused] = useState(true);
@@ -15,10 +16,11 @@ function App() {
   const appWindow = getCurrentWindow();
 
   let isModalOpen = false;
-  const [openExplorer, setOpenExplorer] = useState(false);
+  const [openQuickPick, setOpenQuickPick] = useState(false);
   const [openNewNote, setOpenNewNote] = useState(false);
   const [openDeleteNote, setOpenDeleteNote] = useState(false);
   const [openFolderControl, setOpenFolderControl] = useState(false);
+  const [openExplorer, setOpenExplorer] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -51,11 +53,11 @@ function App() {
     });
 
     // Keydown event listener
-    const openExplorerKeydown = (e: KeyboardEvent) => {
+    const openQuickPickKeydown = (e: KeyboardEvent) => {
       const isModifierKey = e.ctrlKey || e.metaKey;
       if (isModifierKey && e.key.toLowerCase() === "p") {
         e.preventDefault();
-        setOpenExplorer((prev) => !prev);
+        setOpenQuickPick((prev) => !prev);
       }
     };
 
@@ -83,19 +85,28 @@ function App() {
       }
     };
 
+    const openExplorerKeydown = (e: KeyboardEvent) => {
+      const isModifierKey = e.ctrlKey || e.metaKey;
+      if (isModifierKey && e.key.toLowerCase() === "e") {
+        e.preventDefault();
+        setOpenExplorer((prev) => !prev);
+      }
+    };
+
     const closeModalKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setOpenExplorer(false);
+        setOpenQuickPick(false);
         setOpenNewNote(false);
         setOpenDeleteNote(false);
         setOpenFolderControl(false);
       }
     };
 
-    window.addEventListener("keydown", openExplorerKeydown);
+    window.addEventListener("keydown", openQuickPickKeydown);
     window.addEventListener("keydown", openNewNoteKeydown);
     window.addEventListener("keydown", openDeleteNoteKeydown);
     window.addEventListener("keydown", openFolderControlKeydown);
+    window.addEventListener("keydown", openExplorerKeydown);
     window.addEventListener("keydown", closeModalKeydown);
 
     return () => {
@@ -106,10 +117,11 @@ function App() {
       unlistenFocus.then((f) => f());
 
       // Remove keyboard event listener
-      window.removeEventListener("keydown", openExplorerKeydown);
+      window.removeEventListener("keydown", openQuickPickKeydown);
       window.removeEventListener("keydown", openNewNoteKeydown);
       window.removeEventListener("keydown", openDeleteNoteKeydown);
       window.removeEventListener("keydown", openFolderControlKeydown);
+      window.removeEventListener("keydown", openExplorerKeydown);
       window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
@@ -157,9 +169,9 @@ function App() {
         </div>
       </div>
 
-      <Modal isOpen={openExplorer} onClose={() => setOpenExplorer(false)}>
-        <Explorer
-          close={() => setOpenExplorer(false)}
+      <Modal isOpen={openQuickPick} onClose={() => setOpenQuickPick(false)}>
+        <QuickPick
+          close={() => setOpenQuickPick(false)}
           onFileSelected={(file: File) => setSelectedFile(file)}
         />
       </Modal>
@@ -186,18 +198,27 @@ function App() {
         <FolderControl close={() => setOpenFolderControl(false)} />
       </Modal>
 
-      {selectedFile ? (
-        <div className="flex-1 overflow-y-auto">
-          <Editor file={selectedFile} />
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center mb-10 selection:bg-transparent cursor-default">
-          <GetStarted
-            openExplorer={() => setOpenExplorer(true)}
-            openNewNote={() => setOpenNewNote(true)}
+      <div className="flex-1 flex flex-row">
+        {openExplorer && (
+          <FileExplorer
+            onFileSelected={(file: File) => setSelectedFile(file)}
+            currentFile={selectedFile!}
           />
-        </div>
-      )}
+        )}
+        {selectedFile ? (
+          <div className="flex-1 overflow-y-auto">
+            <Editor file={selectedFile} />
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center mb-10 selection:bg-transparent cursor-default">
+            <GetStarted
+              openQuickPick={() => setOpenQuickPick(true)}
+              openNewNote={() => setOpenNewNote(true)}
+              openExplorer={() => setOpenExplorer((prev) => !prev)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
