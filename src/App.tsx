@@ -128,7 +128,7 @@ function App() {
 
   return (
     <div
-      className={`${focused ? "bg-primary-tint" : "bg-primary"} transition-colors duration-100 flex flex-col h-screen`}
+      className={`${focused ? "bg-primary-tint" : "bg-primary"} transition-colors duration-100 flex flex-col h-screen overflow-hidden`}
     >
       <div
         data-tauri-drag-region
@@ -198,7 +198,7 @@ function App() {
         <FolderControl close={() => setOpenFolderControl(false)} />
       </Modal>
 
-      <div className="flex-1 flex flex-row">
+      <div className="flex-1 flex flex-row relative min-h-0 overflow-hidden">
         {openExplorer && (
           <FileExplorer
             onFileSelected={(file: File) => setSelectedFile(file)}
@@ -206,11 +206,11 @@ function App() {
           />
         )}
         {selectedFile ? (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-w-0 overflow-hidden relative h-full">
             <Editor file={selectedFile} />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center mb-10 selection:bg-transparent cursor-default">
+          <div className="flex-1 flex flex-col items-center justify-center mb-10 select-none cursor-default">
             <GetStarted
               openQuickPick={() => setOpenQuickPick(true)}
               openNewNote={() => setOpenNewNote(true)}

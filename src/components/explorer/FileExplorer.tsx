@@ -33,7 +33,7 @@ function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
   }, []);
 
   return (
-    <div className="w-3xs border-r-2 border-slate-600 overflow-y-auto overflow-x-hidden">
+    <div className="w-3xs shrink-0 h-full border-r-2 border-slate-600 overflow-y-auto overflow-x-hidden">
       <div className="p-2.5 font-bold text-sm text-slate-500">Explorer</div>
 
       {loading && <div className="p-2.5">Loading...</div>}
