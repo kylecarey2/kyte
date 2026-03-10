@@ -11,8 +11,8 @@ import {
 import "@mdxeditor/editor/style.css";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { File } from "../models/File";
-import "./editor.overrides.css";
+import { File } from "../../models/File";
+import "./Editor.overrides.css";
 
 interface EditorProps {
   file: File | null;

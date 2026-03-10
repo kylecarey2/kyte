@@ -1,6 +1,6 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState } from "react";
-import Editor from "./components/Editor";
+import Editor from "./components/editor/Editor";
 import QuickPick from "./components/QuickPick";
 import Modal from "./components/Modal";
 import { File } from "./models/File";
