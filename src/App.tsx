@@ -9,6 +9,7 @@ import DeleteNote from "./components/notes/DeleteNote";
 import GetStarted from "./components/GetStarted";
 import FolderControl from "./components/folders/FolderControl";
 import FileExplorer from "./components/explorer/FileExplorer";
+import RenameNote from "./components/notes/RenameNote";
 
 function App() {
   const [focused, setFocused] = useState(true);
@@ -20,6 +21,7 @@ function App() {
   const [openNewNote, setOpenNewNote] = useState(false);
   const [openDeleteNote, setOpenDeleteNote] = useState(false);
   const [openFolderControl, setOpenFolderControl] = useState(false);
+  const [openRenameNote, setOpenRenameNote] = useState(false);
   const [openExplorer, setOpenExplorer] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -85,6 +87,14 @@ function App() {
       }
     };
 
+    const openRenameNoteKeydown = (e: KeyboardEvent) => {
+      const isModifierKey = e.ctrlKey || e.metaKey;
+      if (isModifierKey && e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        setOpenRenameNote((prev) => !prev);
+      }
+    };
+
     const openExplorerKeydown = (e: KeyboardEvent) => {
       const isModifierKey = e.ctrlKey || e.metaKey;
       if (isModifierKey && e.key.toLowerCase() === "e") {
@@ -99,6 +109,7 @@ function App() {
         setOpenNewNote(false);
         setOpenDeleteNote(false);
         setOpenFolderControl(false);
+        setOpenRenameNote(false);
       }
     };
 
@@ -106,6 +117,7 @@ function App() {
     window.addEventListener("keydown", openNewNoteKeydown);
     window.addEventListener("keydown", openDeleteNoteKeydown);
     window.addEventListener("keydown", openFolderControlKeydown);
+    window.addEventListener("keydown", openRenameNoteKeydown);
     window.addEventListener("keydown", openExplorerKeydown);
     window.addEventListener("keydown", closeModalKeydown);
 
@@ -122,6 +134,7 @@ function App() {
       window.removeEventListener("keydown", openDeleteNoteKeydown);
       window.removeEventListener("keydown", openFolderControlKeydown);
       window.removeEventListener("keydown", openExplorerKeydown);
+      window.removeEventListener("keydown", openRenameNoteKeydown);
       window.removeEventListener("keydown", closeModalKeydown);
     };
   }, []);
@@ -196,6 +209,14 @@ function App() {
         onClose={() => setOpenFolderControl(false)}
       >
         <FolderControl close={() => setOpenFolderControl(false)} />
+      </Modal>
+
+      <Modal isOpen={openRenameNote} onClose={() => setOpenRenameNote(false)}>
+        <RenameNote
+          close={() => setOpenRenameNote(false)}
+          currentFile={selectedFile}
+          onFileRenamed={(file: File) => setSelectedFile(file)}
+        />
       </Modal>
 
       <div className="flex-1 flex flex-row relative min-h-0 overflow-hidden">
