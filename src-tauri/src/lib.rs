@@ -1,6 +1,6 @@
 use serde::Serialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::Manager;
 use walkdir::WalkDir;
 use window_vibrancy::*;
@@ -33,10 +33,25 @@ fn get_base_dir() -> Result<PathBuf, String> {
     Ok(path)
 }
 
+fn sanitize_relative(input: &str) -> String {
+    let s = input.trim().replace("\\", "/");
+    s.trim_start_matches('/')
+        .trim_start_matches('\\')
+        .to_string()
+}
+
+fn full_to_relative(full: &Path, base: &Path) -> String {
+    full.strip_prefix(base)
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| full.to_string_lossy().into_owned())
+        .replace("\\", "/")
+}
+
 #[tauri::command]
 fn read_file(filename: &str) -> Result<String, String> {
     let mut full_path = get_base_dir()?;
-    full_path.push(filename);
+    let rel = sanitize_relative(filename);
+    full_path.push(rel);
 
     fs::read_to_string(full_path).map_err(|e| e.to_string())
 }
@@ -44,7 +59,8 @@ fn read_file(filename: &str) -> Result<String, String> {
 #[tauri::command]
 fn write_file(filename: &str, content: &str) -> Result<(), String> {
     let mut full_path = get_base_dir()?;
-    full_path.push(filename);
+    let rel = sanitize_relative(filename);
+    full_path.push(rel);
 
     fs::write(full_path, content).map_err(|e| e.to_string())
 }
@@ -92,6 +108,11 @@ fn list_dirs() -> Result<Vec<String>, String> {
                 .to_string()
                 .replace("\\", "/");
 
+            // Skip the root directory
+            if relative_path.is_empty() {
+                continue;
+            }
+
             dirs.push(relative_path);
         }
     }
@@ -106,12 +127,11 @@ fn create_file(filename: &str) -> Result<String, String> {
     // Trim
     let mut resolved_name = filename.trim().replace(" ", "-");
 
+    // normalize slashes and remove leading slash
+    resolved_name = sanitize_relative(&resolved_name);
+
     if !resolved_name.ends_with(".md") {
         resolved_name.push_str(".md");
-    }
-
-    if resolved_name.starts_with('/') {
-        resolved_name = resolved_name.trim_start_matches('/').to_string();
     }
 
     full_path.push(&resolved_name);
@@ -129,12 +149,14 @@ fn create_file(filename: &str) -> Result<String, String> {
 
     let _ = fs::write(&full_path, content).map_err(|e| e.to_string());
 
-    Ok(full_path.to_string_lossy().to_string())
+    // Return relative path only
+    Ok(resolved_name.replace("\\", "/"))
 }
 
 #[tauri::command]
 fn delete_file(path: &str) -> Result<(), String> {
-    let full_path = get_base_dir()?.join(path);
+    let rel = sanitize_relative(path);
+    let full_path = get_base_dir()?.join(rel);
     std::fs::remove_file(full_path).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -154,9 +176,8 @@ fn create_directory(dirname: &str) -> Result<String, String> {
         return Err("Invalid directory name".into());
     }
 
-    if resolved_name.starts_with('/') {
-        resolved_name = resolved_name.trim_start_matches('/').to_string();
-    }
+    // normalize slashes and remove leading slash
+    resolved_name = sanitize_relative(&resolved_name);
 
     full_path.push(&resolved_name);
 
@@ -167,30 +188,39 @@ fn create_directory(dirname: &str) -> Result<String, String> {
 
     fs::create_dir_all(&full_path).map_err(|e| e.to_string())?;
 
-    Ok(full_path.to_string_lossy().to_string())
+    // Return relative path only
+    Ok(resolved_name.replace("\\", "/"))
 }
 
 #[tauri::command]
 fn delete_directory(dirname: &str) -> Result<(), String> {
-    let full_path = get_base_dir()?.join(dirname.trim_start_matches("/").to_string());
+    let rel = sanitize_relative(dirname);
+    let full_path = get_base_dir()?.join(rel);
     std::fs::remove_dir_all(full_path).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 fn get_file_tree() -> Result<FileNode, String> {
-    let path = get_base_dir()?;
-    build_tree(path).map_err(|e| e.to_string())
+    let base = get_base_dir()?;
+    build_tree(base.clone(), &base).map_err(|e| e.to_string())
 }
 
-fn build_tree(path: PathBuf) -> Result<FileNode, std::io::Error> {
-    // Get file/folder name
-    let name = path
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.to_string_lossy().into_owned());
+fn build_tree(path: PathBuf, base: &PathBuf) -> Result<FileNode, std::io::Error> {
+    // Determine display name (file or directory name). For root, use the base dir name if available.
+    let name = if path == *base {
+        path.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "".to_string())
+    } else {
+        path.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| path.to_string_lossy().into_owned())
+    };
 
-    let path_str = path.to_string_lossy().into_owned();
+    // Build relative path from base. For the base itself this will be an empty string.
+    let path_str = full_to_relative(&path, base);
+
     let is_dir = path.is_dir();
 
     let mut children = None;
@@ -208,7 +238,7 @@ fn build_tree(path: PathBuf) -> Result<FileNode, std::io::Error> {
                 }
             }
 
-            if let Ok(child_node) = build_tree(child_path) {
+            if let Ok(child_node) = build_tree(child_path, base) {
                 dir_children.push(child_node);
             }
         }
@@ -231,6 +261,33 @@ fn build_tree(path: PathBuf) -> Result<FileNode, std::io::Error> {
     })
 }
 
+#[tauri::command]
+fn rename_file(path: String, new_name: String) -> Result<String, String> {
+    // Prevent directory traversal or invalid names in new name
+    if new_name.contains('/') || new_name.contains('\\') {
+        return Err("Invalid file name".into());
+    }
+
+    let base = get_base_dir()?;
+    let rel = sanitize_relative(&path);
+    let full_old = base.join(rel);
+
+    let parent = full_old
+        .parent()
+        .ok_or_else(|| "Invalid path".to_string())?
+        .to_path_buf();
+
+    let new_path = parent.join(&new_name);
+
+    if new_path.exists() {
+        return Err("File already exists".into());
+    }
+
+    std::fs::rename(&full_old, &new_path).map_err(|e| e.to_string())?;
+
+    Ok(full_to_relative(new_path.as_path(), base.as_path()))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -245,6 +302,7 @@ pub fn run() {
             create_directory,
             delete_directory,
             get_file_tree,
+            rename_file
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
