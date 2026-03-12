@@ -21,7 +21,7 @@ function TreeNode({
     e.stopPropagation();
 
     if (node.is_dir) {
-      setIsOpen(!isOpen);
+      setIsOpen((prev) => !prev);
     } else {
       // Pass information up
       onFileSelected({ name: node.name, path: node.path });
@@ -93,9 +93,9 @@ function TreeNode({
       {/* Render Children if Folder is Open */}
       {isOpen && node.children && (
         <div>
-          {node.children.map((child, index) => (
+          {node.children.map((child) => (
             <TreeNode
-              key={index}
+              key={child.path}
               node={child}
               depth={depth + 1}
               onFileSelected={onFileSelected}
