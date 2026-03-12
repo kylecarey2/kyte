@@ -1,7 +1,12 @@
+use notify::{
+    event::{CreateKind, ModifyKind, RemoveKind},
+    EventKind, RecommendedWatcher, RecursiveMode, Watcher,
+};
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
-use tauri::Manager;
+use std::sync::Mutex;
+use tauri::{AppHandle, Emitter, Manager, State};
 use walkdir::WalkDir;
 use window_vibrancy::*;
 
@@ -288,10 +293,62 @@ fn rename_file(path: String, new_name: String) -> Result<String, String> {
     Ok(full_to_relative(new_path.as_path(), base.as_path()))
 }
 
+struct WatcherState {
+    watcher: Mutex<Option<RecommendedWatcher>>,
+}
+
+#[tauri::command]
+fn watch_folder(app: AppHandle, state: State<'_, WatcherState>) -> Result<(), String> {
+    let path = get_base_dir()?;
+
+    // Create a channel between watcher thread and main thread
+    let (tx, rx) = std::sync::mpsc::channel();
+
+    // Initialize the watcher
+    let mut watcher = notify::RecommendedWatcher::new(tx, notify::Config::default())
+        .map_err(|e| e.to_string())?;
+
+    // Watch path recursively
+    watcher
+        .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
+        .map_err(|e| e.to_string())?;
+
+    // Store the watcher in app state.
+    *state.watcher.lock().unwrap() = Some(watcher);
+
+    // Spawn a background thread to listen for file system events
+    std::thread::spawn(move || {
+        for res in rx {
+            match res {
+                Ok(event) => {
+                    let should_emit = match event.kind {
+                        EventKind::Create(CreateKind::File)
+                        | EventKind::Create(CreateKind::Any)
+                        | EventKind::Remove(RemoveKind::File)
+                        | EventKind::Remove(RemoveKind::Any)
+                        | EventKind::Modify(ModifyKind::Name(_)) => true,
+                        _ => false,
+                    };
+
+                    if should_emit {
+                        let _ = app.emit("fs-change", ());
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(WatcherState {
+            watcher: Mutex::new(None),
+        })
         .invoke_handler(tauri::generate_handler![
             read_file,
             write_file,
@@ -302,7 +359,8 @@ pub fn run() {
             create_directory,
             delete_directory,
             get_file_tree,
-            rename_file
+            rename_file,
+            watch_folder
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
