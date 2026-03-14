@@ -148,9 +148,15 @@ function App() {
         onContextMenu={(e) => e.preventDefault()}
         className="flex flex-row justify-between items-center border-b-2 border-slate-600 relative z-51"
       >
-        <p data-tauri-drag-region className="text-white ml-2 m-0 select-none">
+        <span
+          data-tauri-drag-region
+          className="text-white ml-2 m-0 select-none"
+        >
           Kyte
-        </p>
+        </span>
+        <span data-tauri-drag-region className="text-slate-500 select-none">
+          {selectedFile?.name ?? ""}
+        </span>
         <div className="flex flex-row">
           <svg
             onClick={minimize}
