@@ -1,98 +1,272 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ConfirmDelete from "./ConfirmDelete";
-import DeleteFolder from "./DeleteFolder";
 import NewFolder from "./NewFolder";
 import { invoke } from "@tauri-apps/api/core";
 
-type DisplayMode = "new-folder" | "delete-folder" | "confirm-delete";
+type DisplayMode = "main" | "new-folder" | "confirm-delete";
 
 interface FolderControlProps {
   close: () => void;
 }
 
 function FolderControl({ close }: FolderControlProps) {
-  const [mode, setMode] = useState<DisplayMode>("new-folder");
-  const [loading, setLoading] = useState(false);
-
+  const [mode, setMode] = useState<DisplayMode>("main");
   const [folders, setFolders] = useState<string[]>([]);
-  const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const thisRef = useRef<HTMLDivElement>(null);
+
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
+  const [offset, setOffset] = useState<number>(0);
+  const shownNumber = 5;
+  const [shownDirs, setShownDirs] = useState<string[]>([]);
+  const [newSelected, setNewSelected] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const result: string[] = await invoke("list_dirs");
         setFolders(result);
+        setShownDirs(result);
+        if (result.length > 0) {
+          setSelectedFolder(result[0]);
+        }
       } catch (error) {
         console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (mode === "main") {
+      handleFocus();
+    }
+  }, [mode]);
+
+  const handleFocus = () => {
+    if (thisRef.current) {
+      thisRef.current.focus();
+    }
+  };
+
+  const handleDirSelect = (dir: string, index: number, isNew: boolean) => {
+    setSelectedFolder(dir);
+    setHighlightedIndex(index);
+    setNewSelected(isNew);
+
+    if (isNew) {
+      setMode("new-folder");
+    } else {
+      setMode("confirm-delete");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (shownDirs.length === 0) return;
+    if (mode !== "main") return;
+
+    // Calculate the absolute index in the entire list to properly calculate boundaries
+    const absoluteIndex = offset + highlightedIndex;
+
+    if (e.key === "ArrowDown" || e.key === "Tab") {
+      e.preventDefault();
+
+      if (absoluteIndex >= shownDirs.length - 1) {
+        // Very end of list, wrap to top
+        setOffset(0);
+        setHighlightedIndex(0);
+      } else {
+        if (highlightedIndex < shownNumber - 1) {
+          // Move the highlight down
+          setHighlightedIndex((prev) => prev + 1);
+        } else {
+          // Shift window down
+          setOffset((prev) => prev + 1);
+        }
+      }
+
+      setNewSelected(true);
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      const total = folders.length;
+
+      // If at very top wrap to bottom
+      if (absoluteIndex <= 0) {
+        const lastIndex = total - 1;
+        const newOffset = Math.max(0, total - shownNumber);
+        setOffset(newOffset);
+        setHighlightedIndex(lastIndex - newOffset);
+      } else {
+        if (highlightedIndex > 0) {
+          // Move highlight up within visible window
+          setHighlightedIndex((prev) => prev - 1);
+        } else {
+          // Shift window up
+          setOffset((prev) => prev - 1);
+        }
+      }
+
+      setNewSelected(true);
+    }
+
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      setNewSelected((prev) => !prev);
+    }
+
+    if (e.key === "Enter") {
+      // Allow typing a space in the search bar if nothing is highlighted yet
+      if (highlightedIndex === -1) return;
+
+      e.preventDefault();
+      const dir = shownDirs[absoluteIndex];
+      handleDirSelect(dir, highlightedIndex, newSelected);
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const absoluteIndex = offset + highlightedIndex;
+    if (mode !== "main") return;
+
+    if (e.deltaY < 0) {
+      if (absoluteIndex <= 0) {
+        const lastIndex = folders.length - 1;
+
+        // Set offset so last item is visible
+        const newOffset = Math.max(0, folders.length - shownNumber);
+
+        setOffset(newOffset);
+
+        // Highlight last visible item
+        setHighlightedIndex(lastIndex - newOffset);
+      } else {
+        if (highlightedIndex > 0) {
+          // Move the highlight up visually
+          setHighlightedIndex((prev) => prev - 1);
+        } else {
+          // Shift window up
+          setOffset((prev) => prev - 1);
+        }
+      }
+    } else {
+      if (absoluteIndex >= shownDirs.length - 1) {
+        // Very end of list, wrap to top
+        setOffset(0);
+        setHighlightedIndex(0);
+      } else {
+        if (highlightedIndex < shownNumber - 1) {
+          // Move the highlight down
+          setHighlightedIndex((prev) => prev + 1);
+        } else {
+          // Shift window down
+          setOffset((prev) => prev + 1);
+        }
+      }
+    }
+  };
+
   const view = {
-    "new-folder": <NewFolder close={close} folders={folders} />,
-    "delete-folder": (
-      <DeleteFolder
-        folders={folders}
-        onFolderSelected={(folderName: string) => {
-          setPendingDeletion(folderName);
-          setMode("confirm-delete");
-        }}
-      />
+    main: (
+      <div className="overflow-hidden focus:outline-none">
+        <ul className="list-none p-0 m-0 selection:bg-transparent selection:text-inherit">
+          {folders.length === 0 ? (
+            <p>No directories found</p>
+          ) : (
+            shownDirs.slice(offset, offset + shownNumber).map((dir, index) => (
+              <li
+                key={dir}
+                onClick={() => {
+                  setSelectedFolder(dir);
+                  setNewSelected(true);
+                  setHighlightedIndex(index);
+                }}
+                className={`p-2 rounded-lg ${
+                  highlightedIndex === index
+                    ? "bg-slate-500"
+                    : "hover:bg-black/20"
+                } mb-2 cursor-pointer`}
+              >
+                <div className="flex flex-row justify-between items-center">
+                  <div className="flex-1">
+                    {dir} &gt;{" "}
+                    <span
+                      className={
+                        highlightedIndex === index
+                          ? "text-primary"
+                          : "text-slate-500"
+                      }
+                    >
+                      {dir}
+                    </span>
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <span
+                      className={`${highlightedIndex === index ? "hover:bg-black/20" : "hover:bg-white/10"} ${newSelected && highlightedIndex === index ? "border-primary" : "border-transparent"} border-2 p-1`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDirSelect(dir, index, true);
+                      }}
+                    >
+                      New
+                    </span>
+                    <span
+                      className={`${highlightedIndex === index ? "hover:bg-black/20" : "hover:bg-white/10"} ${!newSelected && highlightedIndex === index ? "border-primary" : "border-transparent"} border-2 rounded-r-lg p-1`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDirSelect(dir, index, false);
+                      }}
+                    >
+                      Del
+                    </span>
+                  </div>
+                </div>
+              </li>
+            ))
+          )}
+        </ul>
+        <div className="flex flex-row items-center justify-between">
+          <span className="text-sm text-gray-500">
+            [Enter] to {newSelected ? "create a new folder" : "delete folder"}
+          </span>
+          <span className="text-sm text-gray-500">
+            [
+            {offset + shownNumber < folders.length
+              ? offset + shownNumber
+              : folders.length}{" "}
+            / {folders.length}]
+          </span>
+        </div>
+      </div>
     ),
+    "new-folder": <NewFolder close={close} folder={selectedFolder!} />,
     "confirm-delete": (
       <ConfirmDelete
-        cancel={() => {
-          setMode("delete-folder");
-          setPendingDeletion(null);
-        }}
+        cancel={() => setMode("main")}
         close={close}
-        onFolderDeleted={() => setPendingDeletion(null)}
-        folderName={pendingDeletion!}
+        onFolderDeleted={() => {}}
+        folderName={selectedFolder!}
       />
     ),
   } satisfies Record<DisplayMode, JSX.Element>;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (mode === "confirm-delete") return;
-
-    // Toggle view
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft" || e.key === "Tab") {
-      e.preventDefault();
-      setMode((prev) => {
-        if (prev === "new-folder") return "delete-folder";
-        if (prev === "delete-folder") return "new-folder";
-        return prev;
-      });
-    }
-  };
-
   return mode === "confirm-delete" ? (
     view["confirm-delete"]
   ) : (
-    <div className="text-white" onKeyDown={handleKeyDown}>
+    <div
+      onKeyDown={handleKeyDown}
+      onWheel={handleWheel}
+      tabIndex={0}
+      ref={thisRef}
+      className="text-white focus:outline-none"
+    >
       <div className="flex flex-row justify-between items-center border-b-2 border-slate-600 pb-2 mb-2">
         <h2 className="m-0 p-0">Folder Control</h2>
-        <div className="flex flex-row justify-end items-center gap-2 h-fit">
-          <button
-            className={`${mode === "new-folder" ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer`}
-            onClick={() => setMode("new-folder")}
-          >
-            New Folder
-          </button>
-          <button
-            className={`${mode === "delete-folder" ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer`}
-            onClick={() => setMode("delete-folder")}
-          >
-            Delete Folder
-          </button>
-        </div>
       </div>
-      {loading ? <p>Loading folders...</p> : view[mode]}
+      {view[mode]}
     </div>
   );
 }

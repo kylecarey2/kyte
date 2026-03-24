@@ -20,7 +20,7 @@ function App() {
   const [openQuickPick, setOpenQuickPick] = useState(false);
   const [openNewNote, setOpenNewNote] = useState(false);
   const [openDeleteNote, setOpenDeleteNote] = useState(false);
-  const [openFolderControl, setOpenFolderControl] = useState(false);
+  const [openFolderControl, setOpenFolderControl] = useState(true);
   const [openRenameNote, setOpenRenameNote] = useState(false);
   const [openExplorer, setOpenExplorer] = useState(false);
 
