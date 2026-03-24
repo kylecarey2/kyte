@@ -115,7 +115,7 @@ fn list_dirs() -> Result<Vec<String>, String> {
 
             // Skip the root directory
             if relative_path.is_empty() {
-                continue;
+                // continue;
             }
 
             dirs.push(relative_path);
