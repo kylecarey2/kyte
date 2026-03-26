@@ -2,8 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import ConfirmDelete from "./ConfirmDelete";
 import NewFolder from "./NewFolder";
 import { invoke } from "@tauri-apps/api/core";
+import { FolderNode } from "../../models/FolderNode";
 
 type DisplayMode = "main" | "new-folder" | "confirm-delete";
+
+// Flat representation for UI rendering & keyboard navigation
+interface VisibleNode {
+  path: string;
+  name: string;
+  depth: number;
+  hasChildren: boolean;
+}
 
 interface FolderControlProps {
   close: () => void;
@@ -11,24 +20,30 @@ interface FolderControlProps {
 
 function FolderControl({ close }: FolderControlProps) {
   const [mode, setMode] = useState<DisplayMode>("main");
-  const [folders, setFolders] = useState<string[]>([]);
+  const [rootFolder, setRootFolder] = useState<FolderNode | null>(null);
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
+    new Set([""]),
+  ); // Start with root expanded
+  const [visibleDirs, setVisibleDirs] = useState<VisibleNode[]>([]);
+
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const thisRef = useRef<HTMLDivElement>(null);
 
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
   const [offset, setOffset] = useState<number>(0);
   const shownNumber = 5;
-  const [shownDirs, setShownDirs] = useState<string[]>([]);
   const [newSelected, setNewSelected] = useState<boolean>(true);
 
+  // Fetch the tree
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result: string[] = await invoke("list_dirs");
-        setFolders(result);
-        setShownDirs(result);
-        if (result.length > 0) {
-          setSelectedFolder(result[0]);
+        const root: FolderNode = await invoke("get_folder_tree");
+        setRootFolder(root);
+
+        // Ensure first item is selected initially
+        if (!selectedFolder) {
+          setSelectedFolder(root.path);
         }
       } catch (error) {
         console.error(error);
@@ -38,6 +53,45 @@ function FolderControl({ close }: FolderControlProps) {
     fetchData();
   }, []);
 
+  // Flattens the tree dynamically based on what is expanded
+  useEffect(() => {
+    if (!rootFolder) return;
+
+    const flattenTree = (node: FolderNode, depth = 0): VisibleNode[] => {
+      const result: VisibleNode[] = [];
+      const hasChildren = !!node.children && node.children.length > 0;
+
+      // Push the current node
+      result.push({
+        path: node.path,
+        name: node.path === "" ? "/" : node.name, // Format root path beautifully
+        depth,
+        hasChildren,
+      });
+
+      // Recursively push children if expanded
+      if (expandedPaths.has(node.path) && hasChildren) {
+        for (const child of node.children!) {
+          result.push(...flattenTree(child, depth + 1));
+        }
+      }
+      return result;
+    };
+
+    const newVisibleDirs = flattenTree(rootFolder);
+    setVisibleDirs(newVisibleDirs);
+
+    // Recalculate boundaries on collapse
+    const absoluteIndex = offset + highlightedIndex;
+    if (newVisibleDirs.length > 0 && absoluteIndex >= newVisibleDirs.length) {
+      const newAbsolute = newVisibleDirs.length - 1;
+      const newOffset = Math.max(0, newAbsolute - shownNumber + 1);
+      setOffset(newOffset);
+      setHighlightedIndex(newAbsolute - newOffset);
+    }
+  }, [rootFolder, expandedPaths]);
+
+  // Re-focus main menu
   useEffect(() => {
     if (mode === "main") {
       handleFocus();
@@ -50,66 +104,55 @@ function FolderControl({ close }: FolderControlProps) {
     }
   };
 
-  const handleDirSelect = (dir: string, index: number, isNew: boolean) => {
-    setSelectedFolder(dir);
+  const toggleExpand = (path: string) => {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  };
+
+  const handleDirSelect = (dirPath: string, index: number, isNew: boolean) => {
+    setSelectedFolder(dirPath);
     setHighlightedIndex(index);
     setNewSelected(isNew);
-
-    if (isNew) {
-      setMode("new-folder");
-    } else {
-      setMode("confirm-delete");
-    }
+    setMode(isNew ? "new-folder" : "confirm-delete");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (shownDirs.length === 0) return;
-    if (mode !== "main") return;
+    if (visibleDirs.length === 0 || mode !== "main") return;
 
-    // Calculate the absolute index in the entire list to properly calculate boundaries
     const absoluteIndex = offset + highlightedIndex;
+    const currentPath = visibleDirs[absoluteIndex].path;
 
     if (e.key === "ArrowDown" || e.key === "Tab") {
       e.preventDefault();
-
-      if (absoluteIndex >= shownDirs.length - 1) {
-        // Very end of list, wrap to top
+      if (absoluteIndex >= visibleDirs.length - 1) {
         setOffset(0);
         setHighlightedIndex(0);
       } else {
-        if (highlightedIndex < shownNumber - 1) {
-          // Move the highlight down
-          setHighlightedIndex((prev) => prev + 1);
-        } else {
-          // Shift window down
-          setOffset((prev) => prev + 1);
-        }
+        if (highlightedIndex < shownNumber - 1)
+          setHighlightedIndex((p) => p + 1);
+        else setOffset((p) => p + 1);
       }
-
       setNewSelected(true);
     }
 
     if (e.key === "ArrowUp") {
       e.preventDefault();
-
-      const total = folders.length;
-
-      // If at very top wrap to bottom
       if (absoluteIndex <= 0) {
-        const lastIndex = total - 1;
-        const newOffset = Math.max(0, total - shownNumber);
+        const lastIndex = visibleDirs.length - 1;
+        const newOffset = Math.max(0, visibleDirs.length - shownNumber);
         setOffset(newOffset);
         setHighlightedIndex(lastIndex - newOffset);
       } else {
-        if (highlightedIndex > 0) {
-          // Move highlight up within visible window
-          setHighlightedIndex((prev) => prev - 1);
-        } else {
-          // Shift window up
-          setOffset((prev) => prev - 1);
-        }
+        if (highlightedIndex > 0) setHighlightedIndex((p) => p - 1);
+        else setOffset((p) => p - 1);
       }
-
       setNewSelected(true);
     }
 
@@ -118,53 +161,40 @@ function FolderControl({ close }: FolderControlProps) {
       setNewSelected((prev) => !prev);
     }
 
-    if (e.key === "Enter") {
-      // Allow typing a space in the search bar if nothing is highlighted yet
-      if (highlightedIndex === -1) return;
-
+    if (e.key === " ") {
       e.preventDefault();
-      const dir = shownDirs[absoluteIndex];
-      handleDirSelect(dir, highlightedIndex, newSelected);
+      toggleExpand(currentPath);
+    }
+
+    if (e.key === "Enter") {
+      if (highlightedIndex === -1) return;
+      e.preventDefault();
+      handleDirSelect(currentPath, highlightedIndex, newSelected);
     }
   };
 
   const handleWheel = (e: React.WheelEvent) => {
+    if (mode !== "main" || visibleDirs.length === 0) return;
     const absoluteIndex = offset + highlightedIndex;
-    if (mode !== "main") return;
 
     if (e.deltaY < 0) {
       if (absoluteIndex <= 0) {
-        const lastIndex = folders.length - 1;
-
-        // Set offset so last item is visible
-        const newOffset = Math.max(0, folders.length - shownNumber);
-
+        const lastIndex = visibleDirs.length - 1;
+        const newOffset = Math.max(0, visibleDirs.length - shownNumber);
         setOffset(newOffset);
-
-        // Highlight last visible item
         setHighlightedIndex(lastIndex - newOffset);
       } else {
-        if (highlightedIndex > 0) {
-          // Move the highlight up visually
-          setHighlightedIndex((prev) => prev - 1);
-        } else {
-          // Shift window up
-          setOffset((prev) => prev - 1);
-        }
+        if (highlightedIndex > 0) setHighlightedIndex((p) => p - 1);
+        else setOffset((p) => p - 1);
       }
     } else {
-      if (absoluteIndex >= shownDirs.length - 1) {
-        // Very end of list, wrap to top
+      if (absoluteIndex >= visibleDirs.length - 1) {
         setOffset(0);
         setHighlightedIndex(0);
       } else {
-        if (highlightedIndex < shownNumber - 1) {
-          // Move the highlight down
-          setHighlightedIndex((prev) => prev + 1);
-        } else {
-          // Shift window down
-          setOffset((prev) => prev + 1);
-        }
+        if (highlightedIndex < shownNumber - 1)
+          setHighlightedIndex((p) => p + 1);
+        else setOffset((p) => p + 1);
       }
     }
   };
@@ -173,71 +203,138 @@ function FolderControl({ close }: FolderControlProps) {
     main: (
       <div className="overflow-hidden focus:outline-none">
         <ul className="list-none p-0 m-0 selection:bg-transparent selection:text-inherit">
-          {folders.length === 0 ? (
+          {visibleDirs.length === 0 ? (
             <p>No directories found</p>
           ) : (
-            shownDirs.slice(offset, offset + shownNumber).map((dir, index) => (
-              <li
-                key={dir}
-                onClick={() => {
-                  setSelectedFolder(dir);
-                  setNewSelected(true);
-                  setHighlightedIndex(index);
-                }}
-                className={`p-2 rounded-lg ${
-                  highlightedIndex === index
-                    ? "bg-slate-500"
-                    : "hover:bg-black/20"
-                } mb-2 cursor-pointer`}
-              >
-                <div className="flex flex-row justify-between items-center">
-                  <div className="flex-1">
-                    {dir} &gt;{" "}
-                    <span
-                      className={
-                        highlightedIndex === index
-                          ? "text-primary"
-                          : "text-slate-500"
-                      }
+            visibleDirs
+              .slice(offset, offset + shownNumber)
+              .map((dir, index) => {
+                const isHighlighted = highlightedIndex === index;
+
+                return (
+                  <li
+                    key={dir.path}
+                    onClick={() => {
+                      setSelectedFolder(dir.path);
+                      setHighlightedIndex(index);
+                      toggleExpand(dir.path); // Clicking node toggles tree
+                    }}
+                    className={`p-2 rounded-lg flex flex-row justify-between items-center ${
+                      isHighlighted ? "bg-slate-500" : "hover:bg-black/20"
+                    } mb-2 cursor-pointer`}
+                  >
+                    <div
+                      className="flex-1 flex items-center gap-2"
+                      style={{ paddingLeft: `${dir.depth * 1.5}rem` }}
                     >
-                      {dir}
-                    </span>
-                  </div>
-                  <div className="flex flex-row gap-2">
-                    <span
-                      className={`${highlightedIndex === index ? "hover:bg-black/20" : "hover:bg-white/10"} ${newSelected && highlightedIndex === index ? "border-primary" : "border-transparent"} border-2 p-1`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDirSelect(dir, index, true);
-                      }}
-                    >
-                      New
-                    </span>
-                    <span
-                      className={`${highlightedIndex === index ? "hover:bg-black/20" : "hover:bg-white/10"} ${!newSelected && highlightedIndex === index ? "border-primary" : "border-transparent"} border-2 rounded-r-lg p-1`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDirSelect(dir, index, false);
-                      }}
-                    >
-                      Del
-                    </span>
-                  </div>
-                </div>
-              </li>
-            ))
+                      <span
+                        className={`w-4.75 flex items-center justify-center ${
+                          dir.hasChildren
+                            ? isHighlighted
+                              ? "text-primary"
+                              : "text-slate-400"
+                            : "text-white"
+                        }`}
+                      >
+                        {dir.hasChildren ? (
+                          expandedPaths.has(dir.path) ? (
+                            // Caret down (expanded)
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="size-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                              />
+                            </svg>
+                          ) : (
+                            // Caret right (collapsed)
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="size-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                              />
+                            </svg>
+                          )
+                        ) : (
+                          // Minus (no children)
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="size-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 12h14"
+                            />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="text-white">{dir.name}</span>
+                    </div>
+
+                    <div className="flex flex-row gap-2">
+                      <span
+                        className={`${isHighlighted ? "hover:bg-black/20" : "hover:bg-white/10"} ${
+                          newSelected && isHighlighted
+                            ? "border-primary"
+                            : "border-transparent"
+                        } border-2 p-1`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDirSelect(dir.path, index, true);
+                        }}
+                      >
+                        New
+                      </span>
+                      <span
+                        className={`${isHighlighted ? "hover:bg-black/20" : "hover:bg-white/10"} ${
+                          !newSelected && isHighlighted
+                            ? "border-primary"
+                            : "border-transparent"
+                        } border-2 rounded-r-lg p-1`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDirSelect(dir.path, index, false);
+                        }}
+                      >
+                        Del
+                      </span>
+                    </div>
+                  </li>
+                );
+              })
           )}
         </ul>
-        <div className="flex flex-row items-center justify-between">
-          <span className="text-sm text-gray-500">
-            [Enter] to {newSelected ? "create a new folder" : "delete folder"}
+        <div className="flex flex-row items-center justify-between mt-2">
+          <span className="text-sm text-gray-400">
+            [Space] to expand/collapse • [Enter] to{" "}
+            {newSelected ? "create folder" : "delete"}
           </span>
           <span className="text-sm text-gray-500">
             [
-            {offset + shownNumber < folders.length
+            {offset + shownNumber < visibleDirs.length
               ? offset + shownNumber
-              : folders.length}{" "}
-            / {folders.length}]
+              : visibleDirs.length}{" "}
+            / {visibleDirs.length}]
           </span>
         </div>
       </div>
@@ -253,7 +350,9 @@ function FolderControl({ close }: FolderControlProps) {
       <ConfirmDelete
         cancel={() => setMode("main")}
         close={close}
-        onFolderDeleted={() => {}}
+        onFolderDeleted={() => {
+          // We could refetch data here if required
+        }}
         folderName={selectedFolder!}
       />
     ),
