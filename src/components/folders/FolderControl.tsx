@@ -105,6 +105,7 @@ function FolderControl({ close }: FolderControlProps) {
   };
 
   const toggleExpand = (path: string) => {
+    if (path === "") return; // Disable collapsing root
     setExpandedPaths((prev) => {
       const next = new Set(prev);
       if (next.has(path)) {
@@ -158,7 +159,12 @@ function FolderControl({ close }: FolderControlProps) {
 
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
-      setNewSelected((prev) => !prev);
+      // Don't allow toggling "Del" for the root folder
+      if (currentPath === "") {
+        setNewSelected(true);
+      } else {
+        setNewSelected((prev) => !prev);
+      }
     }
 
     if (e.key === " ") {
@@ -169,7 +175,12 @@ function FolderControl({ close }: FolderControlProps) {
     if (e.key === "Enter") {
       if (highlightedIndex === -1) return;
       e.preventDefault();
-      handleDirSelect(currentPath, highlightedIndex, newSelected);
+
+      handleDirSelect(
+        currentPath,
+        highlightedIndex,
+        currentPath === "" ? true : newSelected, // Force 'New' command if they enter on Root, otherwise respect their selection
+      );
     }
   };
 
@@ -184,18 +195,27 @@ function FolderControl({ close }: FolderControlProps) {
         setOffset(newOffset);
         setHighlightedIndex(lastIndex - newOffset);
       } else {
-        if (highlightedIndex > 0) setHighlightedIndex((p) => p - 1);
-        else setOffset((p) => p - 1);
+        if (highlightedIndex > 0) {
+          setHighlightedIndex((p) => p - 1);
+        } else {
+          setOffset((p) => p - 1);
+        }
       }
+
+      setNewSelected(true);
     } else {
       if (absoluteIndex >= visibleDirs.length - 1) {
         setOffset(0);
         setHighlightedIndex(0);
       } else {
-        if (highlightedIndex < shownNumber - 1)
+        if (highlightedIndex < shownNumber - 1) {
           setHighlightedIndex((p) => p + 1);
-        else setOffset((p) => p + 1);
+        } else {
+          setOffset((p) => p + 1);
+        }
       }
+
+      setNewSelected(true);
     }
   };
 
@@ -217,7 +237,7 @@ function FolderControl({ close }: FolderControlProps) {
                     onClick={() => {
                       setSelectedFolder(dir.path);
                       setHighlightedIndex(index);
-                      toggleExpand(dir.path); // Clicking node toggles tree
+                      if (dir.path !== "") toggleExpand(dir.path);
                     }}
                     className={`p-2 rounded-lg flex flex-row justify-between items-center ${
                       isHighlighted ? "bg-slate-500" : "hover:bg-black/20"
@@ -225,36 +245,52 @@ function FolderControl({ close }: FolderControlProps) {
                   >
                     <div
                       className="flex-1 flex items-center gap-2"
-                      style={{ paddingLeft: `${dir.depth * 1.5}rem` }}
+                      style={{ paddingLeft: `${(dir.depth - 0.75) * 1}rem` }}
                     >
-                      <span
-                        className={`w-4.75 flex items-center justify-center ${
-                          dir.hasChildren
-                            ? isHighlighted
-                              ? "text-primary"
-                              : "text-slate-400"
-                            : "text-white"
-                        }`}
-                      >
-                        {dir.hasChildren ? (
-                          expandedPaths.has(dir.path) ? (
-                            // Caret down (expanded)
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="size-5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                              />
-                            </svg>
+                      {/* Only render tree expansion logic for non-root elements */}
+                      {dir.path !== "" && (
+                        <span
+                          className={`w-4.75 flex items-center justify-center ${
+                            dir.hasChildren
+                              ? isHighlighted
+                                ? "text-primary"
+                                : "text-slate-400"
+                              : "text-white"
+                          }`}
+                        >
+                          {dir.hasChildren ? (
+                            expandedPaths.has(dir.path) ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="size-5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="size-5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                                />
+                              </svg>
+                            )
                           ) : (
-                            // Caret right (collapsed)
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
@@ -266,58 +302,72 @@ function FolderControl({ close }: FolderControlProps) {
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                                d="M5 12h14"
                               />
                             </svg>
-                          )
-                        ) : (
-                          // Minus (no children)
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 12h14"
-                            />
-                          </svg>
-                        )}
-                      </span>
+                          )}
+                        </span>
+                      )}
                       <span className="text-white">{dir.name}</span>
                     </div>
 
                     <div className="flex flex-row gap-2">
-                      <span
-                        className={`${isHighlighted ? "hover:bg-black/20" : "hover:bg-white/10"} ${
-                          newSelected && isHighlighted
-                            ? "border-primary"
-                            : "border-transparent"
-                        } border-2 p-1`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDirSelect(dir.path, index, true);
-                        }}
-                      >
-                        New
-                      </span>
-                      <span
-                        className={`${isHighlighted ? "hover:bg-black/20" : "hover:bg-white/10"} ${
-                          !newSelected && isHighlighted
-                            ? "border-primary"
-                            : "border-transparent"
-                        } border-2 rounded-r-lg p-1`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDirSelect(dir.path, index, false);
-                        }}
-                      >
-                        Del
-                      </span>
+                      {dir.path === "" ? (
+                        <span
+                          className={`${
+                            isHighlighted
+                              ? "hover:bg-black/20"
+                              : "hover:bg-white/10"
+                          } ${
+                            isHighlighted
+                              ? "border-primary"
+                              : "border-transparent"
+                          } border-2 rounded-r p-1 w-18 text-center inline-block`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDirSelect(dir.path, index, true);
+                          }}
+                        >
+                          New
+                        </span>
+                      ) : (
+                        <>
+                          <span
+                            className={`${
+                              isHighlighted
+                                ? "hover:bg-black/20"
+                                : "hover:bg-white/10"
+                            } ${
+                              newSelected && isHighlighted
+                                ? "border-primary"
+                                : "border-transparent"
+                            } border-2 p-1`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDirSelect(dir.path, index, true);
+                            }}
+                          >
+                            New
+                          </span>
+                          <span
+                            className={`${
+                              isHighlighted
+                                ? "hover:bg-black/20"
+                                : "hover:bg-white/10"
+                            } ${
+                              !newSelected && isHighlighted
+                                ? "border-primary"
+                                : "border-transparent"
+                            } border-2 rounded-r-lg p-1`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDirSelect(dir.path, index, false);
+                            }}
+                          >
+                            Del
+                          </span>
+                        </>
+                      )}
                     </div>
                   </li>
                 );
