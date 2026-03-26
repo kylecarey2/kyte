@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react";
 interface NewFolderProps {
   close: () => void;
   folder: string;
+  cancel: () => void;
 }
 
-function NewFolder({ close, folder }: NewFolderProps) {
+function NewFolder({ close, folder, cancel }: NewFolderProps) {
   const [folderName, setFolderName] = useState("");
   const folderNameRef = useRef<HTMLInputElement>(null);
 
@@ -19,7 +20,7 @@ function NewFolder({ close, folder }: NewFolderProps) {
   const handleCreate = async () => {
     let result: string;
     try {
-      if (!folderName) return;
+      if (!folderName.trim()) return;
       const cleanFolderName = folderName.trim();
       result = await invoke("create_directory", {
         dirname: `${folder}/${cleanFolderName}`,
@@ -33,9 +34,22 @@ function NewFolder({ close, folder }: NewFolderProps) {
     close();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleCreate();
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
+  };
+
   return (
     <div
       tabIndex={0}
+      onKeyDown={handleKeyDown}
       className="h-full text-white overflow-hidden focus:outline-none"
     >
       <input

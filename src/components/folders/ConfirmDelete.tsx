@@ -54,6 +54,12 @@ function ConfirmDelete({
         cancel();
       }
     }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
   };
 
   const handleWheel = (e: React.WheelEvent) => {

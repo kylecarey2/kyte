@@ -242,7 +242,13 @@ function FolderControl({ close }: FolderControlProps) {
         </div>
       </div>
     ),
-    "new-folder": <NewFolder close={close} folder={selectedFolder!} />,
+    "new-folder": (
+      <NewFolder
+        close={close}
+        folder={selectedFolder!}
+        cancel={() => setMode("main")}
+      />
+    ),
     "confirm-delete": (
       <ConfirmDelete
         cancel={() => setMode("main")}
