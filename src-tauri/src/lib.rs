@@ -18,6 +18,13 @@ struct File {
     name: String,
 }
 
+#[derive(Serialize)]
+struct Folder {
+    path: String,
+    name: String,
+    children: Option<Vec<Folder>>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct FileNode {
     name: String,
@@ -342,6 +349,60 @@ fn watch_folder(app: AppHandle, state: State<'_, WatcherState>) -> Result<(), St
     Ok(())
 }
 
+#[tauri::command]
+fn get_folder_tree() -> Result<Folder, String> {
+    let base = get_base_dir()?;
+    build_folder_tree(base.clone(), &base).map_err(|e| e.to_string())
+}
+
+fn build_folder_tree(path: PathBuf, base: &PathBuf) -> Result<Folder, std::io::Error> {
+    // For root, use the base dir name or default to empty
+    let name = if path == *base {
+        path.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "".to_string())
+    } else {
+        path.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| path.to_string_lossy().into_owned())
+    };
+
+    let path_str = full_to_relative(&path, base);
+    let mut children = Vec::new();
+
+    if path.is_dir() {
+        for entry in fs::read_dir(&path)? {
+            let entry = entry?;
+            let child_path = entry.path();
+
+            if child_path.is_dir() {
+                // Ignore hidden folders
+                if let Some(file_name) = child_path.file_name() {
+                    if file_name.to_string_lossy().starts_with('.') {
+                        continue;
+                    }
+                }
+
+                if let Ok(child_node) = build_folder_tree(child_path, base) {
+                    children.push(child_node);
+                }
+            }
+        }
+        // Sort folders alphabetically
+        children.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    }
+
+    Ok(Folder {
+        name,
+        path: path_str,
+        children: if children.is_empty() {
+            None
+        } else {
+            Some(children)
+        },
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -359,6 +420,7 @@ pub fn run() {
             create_directory,
             delete_directory,
             get_file_tree,
+            get_folder_tree,
             rename_file,
             watch_folder
         ])
