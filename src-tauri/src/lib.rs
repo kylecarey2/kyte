@@ -280,6 +280,8 @@ fn rename_file(path: String, new_name: String) -> Result<String, String> {
         return Err("Invalid file name".into());
     }
 
+    let resolved_name = new_name.trim().replace(" ", "-");
+
     let base = get_base_dir()?;
     let rel = sanitize_relative(&path);
     let full_old = base.join(rel);
@@ -289,7 +291,7 @@ fn rename_file(path: String, new_name: String) -> Result<String, String> {
         .ok_or_else(|| "Invalid path".to_string())?
         .to_path_buf();
 
-    let new_path = parent.join(&new_name);
+    let new_path = parent.join(&resolved_name);
 
     if new_path.exists() {
         return Err("File already exists".into());

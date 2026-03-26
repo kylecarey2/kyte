@@ -25,7 +25,11 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
           path: currentFile!.path,
           newName: newName,
         });
-        onFileRenamed({ name: newName, path: new_path });
+
+        const createdFileName = new_path.substring(
+          new_path.lastIndexOf("/") + 1,
+        );
+        onFileRenamed({ name: createdFileName, path: new_path });
         close();
       } catch (error) {
         console.error(error);
