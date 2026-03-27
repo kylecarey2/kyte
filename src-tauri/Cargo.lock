@@ -3,6 +3,20 @@
 version = 4
 
 [[package]]
+name = "Kyte"
+version = "0.1.0"
+dependencies = [
+ "notify",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "walkdir",
+ "window-vibrancy 0.7.1",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1870,20 +1884,6 @@ dependencies = [
  "html5ever",
  "indexmap 2.13.0",
  "selectors",
-]
-
-[[package]]
-name = "kynote"
-version = "0.1.0"
-dependencies = [
- "notify",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "walkdir",
- "window-vibrancy 0.7.1",
 ]
 
 [[package]]

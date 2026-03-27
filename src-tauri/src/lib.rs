@@ -10,7 +10,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use walkdir::WalkDir;
 use window_vibrancy::*;
 
-const BASE_DIR: &str = "../md";
+const DEV_BASE_DIR: &str = "../notes";
 
 #[derive(Serialize)]
 struct File {
@@ -33,13 +33,19 @@ pub struct FileNode {
     children: Option<Vec<FileNode>>,
 }
 
-fn get_base_dir() -> Result<PathBuf, String> {
-    let mut path = std::env::current_dir().map_err(|e| e.to_string())?;
-    path.push(BASE_DIR);
+fn get_base_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let path = if cfg!(debug_assertions) {
+        let mut p = std::env::current_dir().map_err(|e| e.to_string())?;
+        p.push(DEV_BASE_DIR);
+        p
+    } else {
+        let mut p = app.path().app_data_dir().map_err(|e| e.to_string())?;
+        p.push("notes");
+        p
+    };
 
-    // Create directory if not exists
     if !path.exists() {
-        let _ = fs::create_dir_all(&path);
+        fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     }
 
     Ok(path)
@@ -60,8 +66,8 @@ fn full_to_relative(full: &Path, base: &Path) -> String {
 }
 
 #[tauri::command]
-fn read_file(filename: &str) -> Result<String, String> {
-    let mut full_path = get_base_dir()?;
+fn read_file(app: AppHandle, filename: &str) -> Result<String, String> {
+    let mut full_path = get_base_dir(&app)?;
     let rel = sanitize_relative(filename);
     full_path.push(rel);
 
@@ -69,8 +75,8 @@ fn read_file(filename: &str) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn write_file(filename: &str, content: &str) -> Result<(), String> {
-    let mut full_path = get_base_dir()?;
+fn write_file(app: AppHandle, filename: &str, content: &str) -> Result<(), String> {
+    let mut full_path = get_base_dir(&app)?;
     let rel = sanitize_relative(filename);
     full_path.push(rel);
 
@@ -78,8 +84,8 @@ fn write_file(filename: &str, content: &str) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn list_files() -> Result<Vec<File>, String> {
-    let full_path = get_base_dir()?;
+fn list_files(app: AppHandle) -> Result<Vec<File>, String> {
+    let full_path = get_base_dir(&app)?;
 
     let mut files = Vec::new();
 
@@ -108,8 +114,8 @@ fn list_files() -> Result<Vec<File>, String> {
 }
 
 #[tauri::command]
-fn list_dirs() -> Result<Vec<String>, String> {
-    let full_path = get_base_dir()?;
+fn list_dirs(app: AppHandle) -> Result<Vec<String>, String> {
+    let full_path = get_base_dir(&app)?;
     let mut dirs = Vec::new();
 
     for entry in WalkDir::new(&full_path).into_iter().filter_map(|e| e.ok()) {
@@ -135,8 +141,8 @@ fn list_dirs() -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-fn create_file(filename: &str) -> Result<String, String> {
-    let mut full_path = get_base_dir()?;
+fn create_file(app: AppHandle, filename: &str) -> Result<String, String> {
+    let mut full_path = get_base_dir(&app)?;
 
     // Trim
     let mut resolved_name = filename.trim().replace(" ", "-");
@@ -168,16 +174,16 @@ fn create_file(filename: &str) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn delete_file(path: &str) -> Result<(), String> {
+fn delete_file(app: AppHandle, path: &str) -> Result<(), String> {
     let rel = sanitize_relative(path);
-    let full_path = get_base_dir()?.join(rel);
+    let full_path = get_base_dir(&app)?.join(rel);
     std::fs::remove_file(full_path).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-fn create_directory(dirname: &str) -> Result<String, String> {
-    let mut full_path = get_base_dir()?;
+fn create_directory(app: AppHandle, dirname: &str) -> Result<String, String> {
+    let mut full_path = get_base_dir(&app)?;
 
     // Trim and sanitize
     let mut resolved_name = dirname.trim().replace(" ", "-");
@@ -207,16 +213,16 @@ fn create_directory(dirname: &str) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn delete_directory(dirname: &str) -> Result<(), String> {
+fn delete_directory(app: AppHandle, dirname: &str) -> Result<(), String> {
     let rel = sanitize_relative(dirname);
-    let full_path = get_base_dir()?.join(rel);
+    let full_path = get_base_dir(&app)?.join(rel);
     std::fs::remove_dir_all(full_path).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-fn get_file_tree() -> Result<FileNode, String> {
-    let base = get_base_dir()?;
+fn get_file_tree(app: AppHandle) -> Result<FileNode, String> {
+    let base = get_base_dir(&app)?;
     build_tree(base.clone(), &base).map_err(|e| e.to_string())
 }
 
@@ -276,7 +282,7 @@ fn build_tree(path: PathBuf, base: &PathBuf) -> Result<FileNode, std::io::Error>
 }
 
 #[tauri::command]
-fn rename_file(path: String, new_name: String) -> Result<String, String> {
+fn rename_file(app: AppHandle, path: String, new_name: String) -> Result<String, String> {
     // Prevent directory traversal or invalid names in new name
     if new_name.contains('/') || new_name.contains('\\') {
         return Err("Invalid file name".into());
@@ -284,7 +290,7 @@ fn rename_file(path: String, new_name: String) -> Result<String, String> {
 
     let resolved_name = new_name.trim().replace(" ", "-");
 
-    let base = get_base_dir()?;
+    let base = get_base_dir(&app)?;
     let rel = sanitize_relative(&path);
     let full_old = base.join(rel);
 
@@ -310,7 +316,7 @@ struct WatcherState {
 
 #[tauri::command]
 fn watch_folder(app: AppHandle, state: State<'_, WatcherState>) -> Result<(), String> {
-    let path = get_base_dir()?;
+    let path = get_base_dir(&app)?;
 
     // Create a channel between watcher thread and main thread
     let (tx, rx) = std::sync::mpsc::channel();
@@ -354,8 +360,8 @@ fn watch_folder(app: AppHandle, state: State<'_, WatcherState>) -> Result<(), St
 }
 
 #[tauri::command]
-fn get_folder_tree() -> Result<Folder, String> {
-    let base = get_base_dir()?;
+fn get_folder_tree(app: AppHandle) -> Result<Folder, String> {
+    let base = get_base_dir(&app)?;
     build_folder_tree(base.clone(), &base).map_err(|e| e.to_string())
 }
 

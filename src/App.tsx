@@ -33,6 +33,13 @@ function App() {
   const close = () => appWindow.close();
   const closeModal = () => setActiveModal(null);
 
+  // Disable context menu
+  useEffect(() => {
+    const handler = (e: MouseEvent) => e.preventDefault();
+    window.addEventListener("contextmenu", handler);
+    return () => window.removeEventListener("contextmenu", handler);
+  }, []);
+
   useEffect(() => {
     let unlistenBlur: (() => void) | null = null;
     let unlistenFocus: (() => void) | null = null;
@@ -92,6 +99,15 @@ function App() {
       } else if (key === "e") {
         e.preventDefault();
         setOpenExplorer((prev) => !prev);
+      }
+
+      // Disable native keybinds
+      if (e.shiftKey && key === "i") {
+        e.preventDefault(); // Inspect element
+      }
+
+      if (key === "F5") {
+        e.preventDefault();
       }
     };
 

@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface GetStartedProps {
   openQuickPick: () => void;
   openNewNote: () => void;
@@ -11,11 +9,8 @@ function GetStarted({
   openNewNote,
   openExplorer,
 }: GetStartedProps) {
-  const [explorerOpen, setExplorerOpen] = useState(false);
-
   const handleExplorerClick = () => {
     openExplorer();
-    setExplorerOpen(!explorerOpen);
   };
 
   return (
@@ -84,7 +79,7 @@ function GetStarted({
           />
         </svg>
 
-        <span>{explorerOpen ? "Close" : "Open"} Explorer</span>
+        <span>Toggle Explorer</span>
       </div>
     </div>
   );

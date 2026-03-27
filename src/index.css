@@ -49,7 +49,8 @@
 }
 
 ::spelling-error {
-    text-decoration: none;
+    text-decoration: var(--color-slate-500) underline wavy 1px;
+    text-underline-offset: 2px;
 }
 
 .font-cascadia {

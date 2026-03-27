@@ -12,11 +12,9 @@ interface FileExplorerProps {
 
 function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTree = async () => {
-    setLoading(true);
     try {
       const tree = await invoke<FileNode>("get_file_tree");
       setFileTree(tree);
@@ -24,8 +22,6 @@ function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
     } catch (err) {
       console.error("Failed to load file tree:", err);
       setError("Failed to load file tree");
-    } finally {
-      setLoading(false);
     }
   };
 
