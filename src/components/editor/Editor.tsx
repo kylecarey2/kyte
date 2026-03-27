@@ -23,7 +23,6 @@ function Editor({ file }: EditorProps) {
   const editor = useRef<MDXEditorMethods>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isUnsaved, setIsUnsaved] = useState(false);
-  const [lastSaved, setLastSaved] = useState(new Date());
 
   const path = file?.path ?? "tmp.md";
 
@@ -73,7 +72,6 @@ function Editor({ file }: EditorProps) {
           });
           console.log("File saved automatically!");
           setIsUnsaved(false);
-          setLastSaved(new Date());
         } catch (error) {
           console.error("Error writing file:", error);
         }
@@ -117,11 +115,7 @@ function Editor({ file }: EditorProps) {
           </svg>
         )}
       </div>
-      <div className="absolute bottom-0 right-2 mr-2">
-        <p className="text-sm text-gray-500">
-          Last saved: {lastSaved.toLocaleTimeString()}
-        </p>
-      </div>
+      <div className="absolute bottom-0 right-2 mr-2"></div>
     </div>
   );
 }

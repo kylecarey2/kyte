@@ -66,7 +66,7 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
           {currentFile?.name} &gt; {newName}
         </span>
         <button
-          className="bg-transparent text-white font-cascadia p-2 border-2 border-slate-500 cursor-pointer hover:bg-black/20"
+          className="bg-transparent text-white font-cascadia p-2 border-2 border-slate-500 cursor-pointer hover:bg-black/20 rounded"
           onClick={() => handleRename()}
         >
           Rename

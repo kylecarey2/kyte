@@ -69,13 +69,13 @@ function DeleteNote({ close, onFileDeleted, currentFile }: DeleteNoteProps) {
       <p>Are you sure you want to delete {fileName}?</p>
       <div className="flex flex-row justify-end items-center gap-2 h-fit">
         <button
-          className={`${!confirmSelected ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer`}
+          className={`${!confirmSelected ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer rounded`}
           onClick={close}
         >
           Cancel
         </button>
         <button
-          className={`${confirmSelected ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer`}
+          className={`${confirmSelected ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer rounded`}
           onClick={handleDelete}
         >
           Confirm
