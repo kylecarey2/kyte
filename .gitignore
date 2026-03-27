@@ -23,5 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# MD directory
-md/*
+# Dev notes directory
+notes/*
