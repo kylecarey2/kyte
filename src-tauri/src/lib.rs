@@ -102,6 +102,8 @@ fn list_files() -> Result<Vec<File>, String> {
         }
     }
 
+    files.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
     Ok(files)
 }
 
