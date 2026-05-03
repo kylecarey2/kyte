@@ -52,3 +52,36 @@
   text-decoration-color: var(--color-secondary);
   cursor: pointer;
 }
+
+/* Override checkbox */
+.mdxeditor li[role="checkbox"][aria-checked="true"] > * {
+  color: var(--color-text-muted) !important;
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text);
+}
+
+/* Checkbox (unchecked) */
+.mdxeditor li[role="checkbox"]:before {
+  border: 1px solid var(--color-text-secondary);
+  border-radius: var(--radius-small);
+  background-color: var(--color-bg);
+  background-repeat: no-repeat;
+}
+
+/* Checkbox (checked) */
+.mdxeditor li[role="checkbox"][aria-checked="true"]:before {
+  border: 1px solid var(--color-text-secondary);
+  border-radius: var(--radius-small);
+  background-color: var(--color-primary);
+  background-repeat: no-repeat;
+}
+
+/* Checkbox indicator */
+.mdxeditor li[role="checkbox"]:after {
+  border-color: var(--color-text);
+}
+
+/* Checkbox focus */
+.mdxeditor li[role="checkbox"]:focus:before {
+  box-shadow: 0 0 2px transparent;
+}
