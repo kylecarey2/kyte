@@ -10,6 +10,7 @@ import GetStarted from "./components/GetStarted";
 import FolderControl from "./components/folders/FolderControl";
 import FileExplorer from "./components/explorer/FileExplorer";
 import RenameNote from "./components/notes/RenameNote";
+import SearchNotes from "./components/notes/SearchNotes";
 
 type ModalType =
   | "quickPick"
@@ -17,6 +18,7 @@ type ModalType =
   | "deleteNote"
   | "folderControl"
   | "renameNote"
+  | "searchNotes"
   | null;
 
 function App() {
@@ -99,6 +101,11 @@ function App() {
       } else if (key === "e") {
         e.preventDefault();
         setOpenExplorer((prev) => !prev);
+      } else if (e.shiftKey && key === "f") {
+        e.preventDefault();
+        setActiveModal((prev) =>
+          prev === "searchNotes" ? null : "searchNotes",
+        );
       }
 
       // Disable native keybinds
@@ -192,6 +199,12 @@ function App() {
             close={closeModal}
             currentFile={selectedFile}
             onFileRenamed={(file: File) => setSelectedFile(file)}
+          />
+        )}
+        {activeModal === "searchNotes" && (
+          <SearchNotes
+            close={closeModal}
+            onFileSelected={(file: File) => setSelectedFile(file)}
           />
         )}
       </Modal>
