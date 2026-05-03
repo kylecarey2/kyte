@@ -322,7 +322,10 @@ fn rename_file(app: AppHandle, path: String, new_name: String) -> Result<String,
         return Err("Invalid file name".into());
     }
 
-    let resolved_name = new_name.trim().replace(" ", "-");
+    let mut resolved_name = new_name.trim().replace(" ", "-");
+    if !resolved_name.ends_with(".md") {
+        resolved_name.push_str(".md");
+    }
 
     let base = get_base_dir(&app)?;
     let rel = sanitize_relative(&path);
