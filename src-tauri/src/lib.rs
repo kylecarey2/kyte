@@ -5,12 +5,13 @@ use notify::{
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
 use walkdir::WalkDir;
 use window_vibrancy::*;
 
-const DEV_BASE_DIR: &str = "../notes";
+pub mod search;
+use search::{parse_note_file, NoteDoc, SearchHandle, SearchState};
 
 #[derive(Serialize)]
 struct File {
@@ -34,19 +35,23 @@ pub struct FileNode {
 }
 
 fn get_base_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let path = if cfg!(debug_assertions) {
-        let mut p = std::env::current_dir().map_err(|e| e.to_string())?;
-        p.push(DEV_BASE_DIR);
-        p
-    } else {
-        let mut p = app.path().app_data_dir().map_err(|e| e.to_string())?;
-        p.push("notes");
-        p
-    };
+    let mut path = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    path.push("notes");
 
     if !path.exists() {
         fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     }
+
+    Ok(path)
+}
+
+fn get_index_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let mut path = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    path.push("search_index");
+
+    // if !path.exists() {
+    //     fs::create_dir_all(&path).map_err(|e| e.to_string())?;
+    // }
 
     Ok(path)
 }
@@ -65,12 +70,31 @@ fn full_to_relative(full: &Path, base: &Path) -> String {
         .replace("\\", "/")
 }
 
+// Index a single note by its relative path
+fn index_by_path(app: &AppHandle, rel_path: &str) -> Result<(), String> {
+    let base = get_base_dir(app)?;
+    let full = base.join(rel_path);
+    if let Some(note) = parse_note_file(&full, &base) {
+        let state: State<SearchHandle> = app.state();
+        let state = state.lock().map_err(|e| e.to_string())?;
+        state.add_or_update(&note).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+// Remove a note from the index by relative path
+fn deindex_by_path(app: &AppHandle, rel_path: &str) -> Result<(), String> {
+    let state: State<SearchHandle> = app.state();
+    let state = state.lock().map_err(|e| e.to_string())?;
+    state.remove(rel_path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[tauri::command]
 fn read_file(app: AppHandle, filename: &str) -> Result<String, String> {
     let mut full_path = get_base_dir(&app)?;
     let rel = sanitize_relative(filename);
     full_path.push(rel);
-
     fs::read_to_string(full_path).map_err(|e| e.to_string())
 }
 
@@ -78,15 +102,24 @@ fn read_file(app: AppHandle, filename: &str) -> Result<String, String> {
 fn write_file(app: AppHandle, filename: &str, content: &str) -> Result<(), String> {
     let mut full_path = get_base_dir(&app)?;
     let rel = sanitize_relative(filename);
-    full_path.push(rel);
+    full_path.push(&rel);
 
-    fs::write(full_path, content).map_err(|e| e.to_string())
+    fs::write(&full_path, content).map_err(|e| e.to_string())?; // write the file
+
+    // Auto-index after write
+    let base = get_base_dir(&app)?;
+    if let Some(note) = parse_note_file(&full_path, &base) {
+        let state: State<SearchHandle> = app.state();
+        let state = state.lock().map_err(|e| e.to_string())?;
+        let _ = state.add_or_update(&note);
+    }
+
+    Ok(())
 }
 
 #[tauri::command]
 fn list_files(app: AppHandle) -> Result<Vec<File>, String> {
     let full_path = get_base_dir(&app)?;
-
     let mut files = Vec::new();
 
     for entry in WalkDir::new(&full_path).into_iter().filter_map(|e| e.ok()) {
@@ -100,16 +133,13 @@ fn list_files(app: AppHandle) -> Result<Vec<File>, String> {
                 .replace("\\", "/");
 
             let file_name = entry.file_name().to_string_lossy().to_string();
-
             files.push(File {
                 path: relative_path,
                 name: file_name,
             });
         }
     }
-
     files.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
-
     Ok(files)
 }
 
@@ -128,15 +158,11 @@ fn list_dirs(app: AppHandle) -> Result<Vec<String>, String> {
                 .to_string()
                 .replace("\\", "/");
 
-            // Skip the root directory
-            if relative_path.is_empty() {
-                // continue;
+            if !relative_path.is_empty() {
+                dirs.push(relative_path);
             }
-
-            dirs.push(relative_path);
         }
     }
-
     Ok(dirs)
 }
 
@@ -147,7 +173,7 @@ fn create_file(app: AppHandle, filename: &str) -> Result<String, String> {
     // Trim
     let mut resolved_name = filename.trim().replace(" ", "-");
 
-    // normalize slashes and remove leading slash
+    // Normalize slashes and remove leading slash
     resolved_name = sanitize_relative(&resolved_name);
 
     if !resolved_name.ends_with(".md") {
@@ -166,18 +192,28 @@ fn create_file(app: AppHandle, filename: &str) -> Result<String, String> {
         .map_or(0, |i| i + 1)..];
 
     let content = format!("# {}", nice_filename.trim());
+    fs::write(&full_path, content).map_err(|e| e.to_string())?;
 
-    let _ = fs::write(&full_path, content).map_err(|e| e.to_string());
+    // Auto-index new file
+    let base = get_base_dir(&app)?;
+    if let Some(note) = parse_note_file(&full_path, &base) {
+        let state: State<SearchHandle> = app.state();
+        let state = state.lock().map_err(|e| e.to_string())?;
+        let _ = state.add_or_update(&note);
+    }
 
-    // Return relative path only
     Ok(resolved_name.replace("\\", "/"))
 }
 
 #[tauri::command]
 fn delete_file(app: AppHandle, path: &str) -> Result<(), String> {
     let rel = sanitize_relative(path);
-    let full_path = get_base_dir(&app)?.join(rel);
-    std::fs::remove_file(full_path).map_err(|e| e.to_string())?;
+    let full_path = get_base_dir(&app)?.join(&rel);
+    std::fs::remove_file(&full_path).map_err(|e| e.to_string())?;
+
+    // Remove from index
+    let _ = deindex_by_path(&app, &rel);
+
     Ok(())
 }
 
@@ -240,9 +276,7 @@ fn build_tree(path: PathBuf, base: &PathBuf) -> Result<FileNode, std::io::Error>
 
     // Build relative path from base. For the base itself this will be an empty string.
     let path_str = full_to_relative(&path, base);
-
     let is_dir = path.is_dir();
-
     let mut children = None;
 
     if is_dir {
@@ -292,7 +326,7 @@ fn rename_file(app: AppHandle, path: String, new_name: String) -> Result<String,
 
     let base = get_base_dir(&app)?;
     let rel = sanitize_relative(&path);
-    let full_old = base.join(rel);
+    let full_old = base.join(&rel);
 
     let parent = full_old
         .parent()
@@ -307,56 +341,12 @@ fn rename_file(app: AppHandle, path: String, new_name: String) -> Result<String,
 
     std::fs::rename(&full_old, &new_path).map_err(|e| e.to_string())?;
 
-    Ok(full_to_relative(new_path.as_path(), base.as_path()))
-}
+    // Update index: remove old, add new
+    let _ = deindex_by_path(&app, &rel);
+    let new_rel = full_to_relative(new_path.as_path(), base.as_path());
+    let _ = index_by_path(&app, &new_rel);
 
-struct WatcherState {
-    watcher: Mutex<Option<RecommendedWatcher>>,
-}
-
-#[tauri::command]
-fn watch_folder(app: AppHandle, state: State<'_, WatcherState>) -> Result<(), String> {
-    let path = get_base_dir(&app)?;
-
-    // Create a channel between watcher thread and main thread
-    let (tx, rx) = std::sync::mpsc::channel();
-
-    // Initialize the watcher
-    let mut watcher = notify::RecommendedWatcher::new(tx, notify::Config::default())
-        .map_err(|e| e.to_string())?;
-
-    // Watch path recursively
-    watcher
-        .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
-        .map_err(|e| e.to_string())?;
-
-    // Store the watcher in app state.
-    *state.watcher.lock().unwrap() = Some(watcher);
-
-    // Spawn a background thread to listen for file system events
-    std::thread::spawn(move || {
-        for res in rx {
-            match res {
-                Ok(event) => {
-                    let should_emit = match event.kind {
-                        EventKind::Create(CreateKind::File)
-                        | EventKind::Create(CreateKind::Any)
-                        | EventKind::Remove(RemoveKind::File)
-                        | EventKind::Remove(RemoveKind::Any)
-                        | EventKind::Modify(ModifyKind::Name(_)) => true,
-                        _ => false,
-                    };
-
-                    if should_emit {
-                        let _ = app.emit("fs-change", ());
-                    }
-                }
-                Err(_) => break,
-            }
-        }
-    });
-
-    Ok(())
+    Ok(new_rel)
 }
 
 #[tauri::command]
@@ -413,6 +403,109 @@ fn build_folder_tree(path: PathBuf, base: &PathBuf) -> Result<Folder, std::io::E
     })
 }
 
+#[tauri::command]
+async fn search_notes(
+    state: State<'_, SearchHandle>,
+    query: String,
+    limit: usize,
+) -> Result<Vec<NoteDoc>, String> {
+    let state = state.lock().map_err(|e| e.to_string())?;
+    state.search(&query, limit).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn rebuild_search_index(app: AppHandle) -> Result<(), String> {
+    let base = get_base_dir(&app)?;
+    let mut notes = Vec::new();
+
+    for entry in WalkDir::new(&base).into_iter().filter_map(|e| e.ok()) {
+        if let Some(note) = parse_note_file(entry.path(), &base) {
+            notes.push(note);
+        }
+    }
+
+    let state: State<SearchHandle> = app.state();
+    let state = Arc::clone(&state);
+    let app_handle = app.clone();
+
+    // Run in background so UI isn't blocked
+    tauri::async_runtime::spawn(async move {
+        let locked = state.lock().unwrap();
+        let _ = locked.clear_and_rebuild(notes, |done, total| {
+            let _ = app_handle.emit("search:rebuild-progress", (done, total));
+        });
+        let _ = app_handle.emit("search:rebuild-complete", ());
+    });
+
+    Ok(())
+}
+
+struct WatcherState {
+    watcher: Mutex<Option<RecommendedWatcher>>,
+}
+
+#[tauri::command]
+fn watch_folder(app: AppHandle, state: State<'_, WatcherState>) -> Result<(), String> {
+    let path = get_base_dir(&app)?;
+    let (tx, rx) = std::sync::mpsc::channel();
+
+    let mut watcher = notify::RecommendedWatcher::new(tx, notify::Config::default())
+        .map_err(|e| e.to_string())?;
+
+    watcher
+        .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
+        .map_err(|e| e.to_string())?;
+
+    *state.watcher.lock().unwrap() = Some(watcher);
+
+    std::thread::spawn(move || {
+        for res in rx {
+            match res {
+                Ok(event) => {
+                    let should_emit = match event.kind {
+                        EventKind::Create(CreateKind::File)
+                        | EventKind::Create(CreateKind::Any)
+                        | EventKind::Remove(RemoveKind::File)
+                        | EventKind::Remove(RemoveKind::Any)
+                        | EventKind::Modify(ModifyKind::Name(_)) => true,
+                        _ => false,
+                    };
+
+                    if should_emit {
+                        let _ = app.emit("fs-change", ());
+                    }
+
+                    // Auto-reindex on external changes
+                    // If a markdown file was modified/created/deleted outside the app,
+                    // update the search index accordingly.
+                    for p in event.paths {
+                        if let Some(ext) = p.extension() {
+                            if ext == "md" {
+                                let base = get_base_dir(&app).ok();
+                                if let Some(ref b) = base {
+                                    let rel = full_to_relative(&p, b);
+                                    match event.kind {
+                                        EventKind::Remove(_) => {
+                                            let _ = deindex_by_path(&app, &rel);
+                                        }
+                                        EventKind::Create(_) | EventKind::Modify(_) => {
+                                            let _ = index_by_path(&app, &rel);
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -432,13 +525,27 @@ pub fn run() {
             get_file_tree,
             get_folder_tree,
             rename_file,
-            watch_folder
+            watch_folder,
+            // search
+            search_notes,
+            rebuild_search_index,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+
+            // Initialize search index
+            let index_dir = get_index_dir(app.handle())?;
+            let search = SearchState::open(index_dir).expect("failed to open search index");
+            app.manage(Arc::new(Mutex::new(search)));
+
+            // Build index on startup
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let _ = rebuild_search_index(app_handle).await;
+            });
 
             Ok(())
         })
