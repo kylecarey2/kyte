@@ -100,14 +100,14 @@ function Editor({ file }: EditorProps) {
       <div className="absolute top-0 right-2">
         {isUnsaved && (
           <svg
-            className="w-4 h-4 m-2"
+            className="w-4 h-4 m-2 text-text-secondary"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
               d="M12 4V20M18 6L6 18M20 12H4M18 18L6 6"
-              stroke="white"
+              stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"

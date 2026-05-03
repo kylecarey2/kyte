@@ -35,7 +35,7 @@ function TreeNode({
         style={{
           paddingLeft: `${depth * 12 + 10}px`,
         }}
-        className={`text-white py-1 flex items-center cursor-pointer overflow-hidden text-ellipsis select-none hover:bg-slate-500 ${node.path === currentFile?.path ? " bg-slate-500/50" : ""}`}
+        className={`text-text py-1 flex items-center cursor-pointer overflow-hidden text-ellipsis select-none hover:${node.path === currentFile?.path ? "bg-active" : "bg-hover"} ${node.path === currentFile?.path ? "bg-active" : ""}`}
       >
         <div className="mr-1.5 text-sm flex items-center shrink-0">
           {node.is_dir ? (
@@ -46,7 +46,7 @@ function TreeNode({
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="size-5"
+                className="size-5 text-text"
               >
                 <path
                   strokeLinecap="round"
@@ -61,7 +61,7 @@ function TreeNode({
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="size-5"
+                className="size-5 text-text"
               >
                 <path
                   strokeLinecap="round"
@@ -77,7 +77,7 @@ function TreeNode({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="size-5"
+              className="size-5 text-text"
             >
               <path
                 strokeLinecap="round"

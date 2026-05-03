@@ -51,11 +51,11 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
     <div
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="h-full text-white overflow-hidden focus:outline-none"
+      className="h-full text-text overflow-hidden focus:outline-none"
     >
       <input
         ref={renameRef}
-        className="w-full mb-2 bg-transparent border-0 border-b-2 border-slate-500 placeholder-slate-500 h-8 focus:outline-none font-cascadia text-lg text-white"
+        className="w-full mb-2 bg-transparent border-0 border-b-2 border-border placeholder-border h-8 focus:outline-none font-cascadia text-lg text-text"
         type="text"
         placeholder="Rename file..."
         value={newName}
@@ -66,7 +66,7 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
           {currentFile?.name} &gt; {newName}
         </span>
         <button
-          className="bg-transparent text-white font-cascadia p-2 border-2 border-slate-500 cursor-pointer hover:bg-black/20 rounded"
+          className="bg-transparent text-text font-cascadia p-2 border-2 border-primary cursor-pointer hover:bg-hover rounded"
           onClick={() => handleRename()}
         >
           Rename

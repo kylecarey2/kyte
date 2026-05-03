@@ -133,11 +133,11 @@ function SearchNotes({ onFileSelected, close }: SearchNotesProps) {
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}
-      className="h-full text-white overflow-hidden focus:outline-none"
+      className="h-full text-text overflow-hidden focus:outline-none"
     >
       <input
         ref={searchInputRef}
-        className="w-full mb-2 bg-transparent border-0 border-b-2 border-slate-500 placeholder-slate-500 h-8 focus:outline-none font-cascadia text-lg text-white"
+        className="w-full mb-2 bg-transparent border-0 border-b-2 border-border placeholder-border h-8 focus:outline-none font-cascadia text-lg text-text"
         type="text"
         placeholder="Search notes..."
         value={query}
@@ -152,25 +152,17 @@ function SearchNotes({ onFileSelected, close }: SearchNotesProps) {
               key={file.path}
               onClick={() => handleFileSelect(file, index)}
               className={`p-2 rounded-lg ${
-                highlightedIndex === index
-                  ? "bg-slate-500"
-                  : "hover:bg-black/20"
+                highlightedIndex === index ? "bg-active" : "hover:bg-hover"
               } mb-2 cursor-pointer`}
             >
               {file.name} &gt;{" "}
-              <span
-                className={
-                  highlightedIndex === index ? "text-primary" : "text-slate-500"
-                }
-              >
-                {file.path}
-              </span>
+              <span className="text-text-muted">{file.path}</span>
             </li>
           ))
         )}
       </ul>
       <div className="flex flex-row justify-end">
-        <p className="text-slate-600 my-0">
+        <p className="text-text-muted my-0">
           [
           {shownNumber < results.length ? shownNumber + offset : results.length}{" "}
           / {results.length}]

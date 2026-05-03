@@ -50,22 +50,22 @@ function NewFolder({ close, folder, cancel }: NewFolderProps) {
     <div
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="h-full text-white overflow-hidden focus:outline-none"
+      className="h-full text-text overflow-hidden focus:outline-none"
     >
       <input
         ref={folderNameRef}
-        className="w-full mb-2 bg-transparent border-0 border-b-2 border-slate-500 placeholder-slate-500 h-8 focus:outline-none font-cascadia text-lg text-white"
+        className="w-full mb-2 bg-transparent border-0 border-b-2 border-border placeholder-border h-8 focus:outline-none font-cascadia text-lg text-text"
         type="text"
         placeholder="Enter folder name..."
         value={folderName}
         onChange={(e) => setFolderName(e.target.value)}
       ></input>
       <div className="flex flex-row justify-between items-center h-fit">
-        <p className="text-slate-600 my-0">
+        <p className="text-text-muted my-0">
           {folder}/{folderName}
         </p>
         <button
-          className="bg-transparent text-white font-cascadia p-2 border-2 border-slate-500 cursor-pointer hover:bg-black/20 rounded"
+          className="bg-transparent text-text font-cascadia p-2 border-2 border-primary cursor-pointer hover:bg-hover rounded"
           onClick={() => handleCreate()}
         >
           Create

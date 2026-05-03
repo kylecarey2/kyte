@@ -48,10 +48,10 @@ function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
   }, []);
 
   return (
-    <div className="w-3xs shrink-0 h-full border-r-2 border-slate-600 overflow-y-auto overflow-x-hidden">
-      <div className="p-2.5 font-bold text-sm text-slate-500">Explorer</div>
+    <div className="w-3xs shrink-0 h-full border-r-2 border-border overflow-y-auto overflow-x-hidden">
+      <div className="p-2.5 font-bold text-sm text-text-muted">Explorer</div>
 
-      {error && <div className="p-2.5 text-slate-500">{error}</div>}
+      {error && <div className="p-2.5 text-text-muted">{error}</div>}
 
       {fileTree && fileTree.children && (
         <div>

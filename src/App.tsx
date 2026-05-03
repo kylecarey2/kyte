@@ -124,20 +124,17 @@ function App() {
 
   return (
     <div
-      className={`${focused ? "bg-primary-tint" : "bg-primary"} transition-colors duration-100 flex flex-col h-screen overflow-hidden`}
+      className={`${focused ? "bg-bg-tint" : "bg-bg"} transition-colors duration-100 flex flex-col h-screen overflow-hidden`}
     >
       <div
         data-tauri-drag-region
         onContextMenu={(e) => e.preventDefault()}
-        className="flex flex-row justify-between items-center border-b-2 border-slate-600 relative z-51"
+        className="flex flex-row justify-between items-center border-b-2 border-border relative z-51"
       >
-        <span
-          data-tauri-drag-region
-          className="text-white ml-2 m-0 select-none"
-        >
+        <span data-tauri-drag-region className="text-text ml-2 m-0 select-none">
           Kyte
         </span>
-        <span data-tauri-drag-region className="text-slate-500 select-none">
+        <span data-tauri-drag-region className="text-text-muted select-none">
           {selectedFile?.name ?? ""}
         </span>
         <div className="flex flex-row">
@@ -148,7 +145,7 @@ function App() {
             viewBox="0 0 24 24"
             strokeWidth="1.5"
             stroke="currentColor"
-            className="size-6 text-white hover:bg-black/20 hover:cursor-pointer transition-colors duration-200 p-2"
+            className="size-6 text-text hover:bg-hover hover:cursor-pointer transition-colors duration-200 p-2"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
           </svg>
@@ -160,7 +157,7 @@ function App() {
             viewBox="0 0 24 24"
             strokeWidth="1.5"
             stroke="currentColor"
-            className="size-6 text-white hover:bg-black/20 hover:cursor-pointer transition-colors duration-200 p-2"
+            className="size-6 text-text hover:bg-hover hover:cursor-pointer transition-colors duration-200 p-2"
           >
             <path
               strokeLinecap="round"

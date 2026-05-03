@@ -237,11 +237,11 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}
-      className="h-full text-white overflow-hidden focus:outline-none flex flex-col"
+      className="h-full text-text overflow-hidden focus:outline-none flex flex-col"
     >
       <input
         ref={fileNameRef}
-        className="w-full mb-2 bg-transparent border-0 border-b-2 border-slate-500 placeholder-slate-500 h-8 focus:outline-none font-cascadia text-lg text-white"
+        className="w-full mb-2 bg-transparent border-0 border-b-2 border-border placeholder-border h-8 focus:outline-none font-cascadia text-lg text-text"
         type="text"
         placeholder="Enter file name..."
         value={fileName}
@@ -268,7 +268,7 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
                       listRef.current?.focus();
                     }}
                     className={`p-2 rounded-lg flex flex-row items-center ${
-                      isHighlighted ? "bg-slate-500" : "hover:bg-black/20"
+                      isHighlighted ? "bg-active" : "hover:bg-hover"
                     } mb-2 cursor-pointer`}
                   >
                     <div
@@ -279,11 +279,7 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
                       {dir.path !== "" && (
                         <span
                           className={`w-4.75 flex items-center justify-center ${
-                            dir.hasChildren
-                              ? isHighlighted
-                                ? "text-primary"
-                                : "text-slate-400"
-                              : "text-white"
+                            dir.hasChildren ? "text-primary" : "text-secondary"
                           }`}
                         >
                           {dir.hasChildren ? (
@@ -336,7 +332,7 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
                           )}
                         </span>
                       )}
-                      <span className="text-white">{dir.name}</span>
+                      <span className="text-text">{dir.name}</span>
                     </div>
                   </li>
                 );
@@ -346,7 +342,7 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       </div>
 
       <div className="flex flex-row justify-between items-center h-fit mt-2">
-        <p className="text-slate-600 my-0">
+        <p className="text-text-muted my-0">
           [
           {shownNumber < visibleDirs.length
             ? shownNumber + offset
@@ -354,7 +350,7 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
           / {visibleDirs.length}]
         </p>
         <button
-          className="bg-transparent text-white font-cascadia p-2 border-2 border-slate-500 cursor-pointer hover:bg-black/20 rounded"
+          className="bg-transparent text-text font-cascadia p-2 border-2 border-primary cursor-pointer hover:bg-hover rounded"
           onClick={() => {
             const currentPath =
               visibleDirs[offset + highlightedIndex]?.path || "";

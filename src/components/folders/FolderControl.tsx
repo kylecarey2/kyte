@@ -240,7 +240,7 @@ function FolderControl({ close }: FolderControlProps) {
                       if (dir.path !== "") toggleExpand(dir.path);
                     }}
                     className={`p-2 rounded-lg flex flex-row justify-between items-center ${
-                      isHighlighted ? "bg-slate-500" : "hover:bg-black/20"
+                      isHighlighted ? "bg-active" : "hover:bg-hover"
                     } mb-2 cursor-pointer`}
                   >
                     <div
@@ -251,11 +251,7 @@ function FolderControl({ close }: FolderControlProps) {
                       {dir.path !== "" && (
                         <span
                           className={`w-4.75 flex items-center justify-center ${
-                            dir.hasChildren
-                              ? isHighlighted
-                                ? "text-primary"
-                                : "text-slate-400"
-                              : "text-white"
+                            dir.hasChildren ? "text-primary" : "text-secondary"
                           }`}
                         >
                           {dir.hasChildren ? (
@@ -308,7 +304,7 @@ function FolderControl({ close }: FolderControlProps) {
                           )}
                         </span>
                       )}
-                      <span className="text-white">{dir.name}</span>
+                      <span className="text-text">{dir.name}</span>
                     </div>
 
                     <div className="flex flex-row gap-2">
@@ -316,13 +312,13 @@ function FolderControl({ close }: FolderControlProps) {
                         <span
                           className={`${
                             isHighlighted
-                              ? "hover:bg-black/20"
-                              : "hover:bg-white/10"
+                              ? "hover:bg-hover"
+                              : "hover:bg-bg-secondary"
                           } ${
                             isHighlighted
                               ? "border-primary"
                               : "border-transparent"
-                          } border-2 rounded-r p-1 w-18 text-center inline-block`}
+                          } border-2 rounded p-1 w-18 text-center inline-block`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDirSelect(dir.path, index, true);
@@ -335,13 +331,13 @@ function FolderControl({ close }: FolderControlProps) {
                           <span
                             className={`${
                               isHighlighted
-                                ? "hover:bg-black/20"
-                                : "hover:bg-white/10"
+                                ? "hover:bg-hover"
+                                : "hover:bg-bg-secondary"
                             } ${
                               newSelected && isHighlighted
                                 ? "border-primary"
                                 : "border-transparent"
-                            } border-2 p-1`}
+                            } border-2 rounded-l p-1`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDirSelect(dir.path, index, true);
@@ -352,13 +348,13 @@ function FolderControl({ close }: FolderControlProps) {
                           <span
                             className={`${
                               isHighlighted
-                                ? "hover:bg-black/20"
-                                : "hover:bg-white/10"
+                                ? "hover:bg-hover"
+                                : "hover:bg-bg-secondary"
                             } ${
                               !newSelected && isHighlighted
                                 ? "border-primary"
                                 : "border-transparent"
-                            } border-2 rounded-r-lg p-1`}
+                            } border-2 rounded-r p-1`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDirSelect(dir.path, index, false);
@@ -375,11 +371,11 @@ function FolderControl({ close }: FolderControlProps) {
           )}
         </ul>
         <div className="flex flex-row items-center justify-between mt-2">
-          <span className="text-sm text-gray-400">
-            [Space] to expand/collapse • [Enter] to{" "}
-            {newSelected ? "create folder" : "delete"}
+          <span className="text-sm text-text-muted">
+            [Space] expand/collapse - [Enter]{" "}
+            {newSelected ? "create" : "delete"}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-text-muted">
             [
             {offset + shownNumber < visibleDirs.length
               ? offset + shownNumber
@@ -416,9 +412,9 @@ function FolderControl({ close }: FolderControlProps) {
       onWheel={handleWheel}
       tabIndex={0}
       ref={thisRef}
-      className="text-white focus:outline-none"
+      className="text-text focus:outline-none"
     >
-      <div className="flex flex-row justify-between items-center border-b-2 border-slate-600 pb-2 mb-2">
+      <div className="flex flex-row justify-between items-center border-b-2 border-border pb-2 mb-2">
         <h2 className="m-0 p-0">Folder Control</h2>
       </div>
       {view[mode]}

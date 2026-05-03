@@ -63,19 +63,21 @@ function DeleteNote({ close, onFileDeleted, currentFile }: DeleteNoteProps) {
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}
       ref={thisRef}
-      className="h-full text-white overflow-hidden focus:outline-none"
+      className="h-full text-text overflow-hidden focus:outline-none"
     >
       <h2>Confirm Delete</h2>
-      <p>Are you sure you want to delete {fileName}?</p>
+      <p className="text-text-secondary">
+        Are you sure you want to delete {fileName}?
+      </p>
       <div className="flex flex-row justify-end items-center gap-2 h-fit">
         <button
-          className={`${!confirmSelected ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer rounded`}
+          className={`${!confirmSelected ? "bg-transparent text-text border-primary hover:bg-hover" : "bg-active text-text border-bg hover:bg-slate-600"} font-cascadia p-2 border-2 rounded cursor-pointer`}
           onClick={close}
         >
           Cancel
         </button>
         <button
-          className={`${confirmSelected ? "bg-slate-500 text-white border-primary hover:bg-slate-600" : "bg-transparent text-white border-slate-500 hover:bg-black/20"}  font-cascadia p-2 border-2 cursor-pointer rounded`}
+          className={`${confirmSelected ? "bg-transparent text-text border-primary hover:bg-hover" : "bg-active text-text border-bg hover:bg-slate-600"} font-cascadia p-2 border-2 rounded cursor-pointer`}
           onClick={handleDelete}
         >
           Confirm

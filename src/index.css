@@ -4,55 +4,79 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 
 @layer base {
-    html,
-    body,
-    #root {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        overscroll-behavior-y: none;
-    }
+  html,
+  body,
+  #root {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
 
-    body {
-        font-family: "Cascadia Mono", monospace;
-    }
+  body {
+    font-family: "Cascadia Mono", monospace;
+  }
 
-    ::selection {
-        background-color: rgba(100, 100, 100, 0.5);
-    }
+  ::selection {
+    background-color: rgba(100, 100, 100, 0.5);
+  }
 }
 
 @theme {
-    --color-primary: rgba(36, 39, 58, 1);
-    --color-primary-tint: rgba(36, 39, 58, 0.75);
+  /* Backgrounds with tint variants */
+  --color-bg: rgba(29, 30, 32, 1);
+  --color-bg-tint: rgba(29, 30, 32, 0.75);
+  --color-bg-secondary: rgba(56, 58, 62, 1);
+  --color-bg-secondary-tint: rgba(56, 58, 62, 0.75);
+
+  --color-border: rgba(70, 72, 77, 1);
+
+  /* Text */
+  --color-text: rgba(243, 244, 246, 1);
+  --color-text-secondary: rgba(209, 213, 219, 1);
+  --color-text-muted: rgba(156, 163, 175, 1);
+
+  /* Primary green with tint */
+  --color-primary: rgba(113, 172, 83, 1);
+  --color-primary-tint: rgba(113, 172, 83, 0.75);
+  --color-primary-soft: rgba(42, 58, 37, 1);
+
+  /* Secondary cyan with tint */
+  --color-secondary: rgba(78, 161, 177, 1);
+  --color-secondary-tint: rgba(78, 161, 177, 0.75);
+  --color-secondary-soft: rgba(31, 53, 58, 1);
+
+  /* Interactive states */
+  --color-hover: rgba(0, 0, 0, 0.2);
+  --color-active: rgba(52, 54, 59, 1);
 }
 
 ::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: none;
+  background: none;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: var(--color-slate-500);
-    border-radius: 5px 5px 5px 5px;
+  background: var(--color-slate-500);
+  border-radius: 5px 5px 5px 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-slate-600);
-    cursor: default;
+  background: var(--color-slate-600);
+  cursor: default;
 }
 
 ::spelling-error {
-    text-decoration: var(--color-slate-500) underline wavy 1px;
-    text-underline-offset: 2px;
+  text-decoration: var(--color-slate-500) underline wavy 1px;
+  text-underline-offset: 2px;
 }
 
 .font-cascadia {
-    font-family: "Cascadia Mono", monospace;
+  font-family: "Cascadia Mono", monospace;
 }

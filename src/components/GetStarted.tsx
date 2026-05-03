@@ -14,9 +14,9 @@ function GetStarted({
   };
 
   return (
-    <div className="text-slate-300">
-      <h1 className="text-center">Get Started</h1>
-      <p className="text-white leading-none">Select or create a note</p>
+    <div className="text-text-muted">
+      <h1 className="text-text-secondary text-center">Get Started</h1>
+      <p className="leading-none">Select or create a note</p>
 
       <div
         className="flex items-center justify-center gap-2 cursor-pointer mt-2 leading-none"
