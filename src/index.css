@@ -30,7 +30,7 @@
   --color-bg-secondary: rgba(56, 58, 62, 1);
   --color-bg-secondary-tint: rgba(56, 58, 62, 0.75);
 
-  --color-border: rgba(70, 72, 77, 1);
+  --color-border: rgba(70, 72, 77, 0.8);
 
   /* Text */
   --color-text: rgba(243, 244, 246, 1);
@@ -49,7 +49,7 @@
 
   /* Interactive states */
   --color-hover: rgba(0, 0, 0, 0.2);
-  --color-active: rgba(52, 54, 59, 1);
+  --color-active: rgba(52, 54, 59, 0.8);
 }
 
 ::-webkit-scrollbar {
@@ -73,8 +73,6 @@
 }
 
 ::spelling-error {
-  /*text-decoration: var(--color-text-muted) underline wavy 1px;
-  text-underline-offset: 2px;*/
   text-decoration: none;
 }
 
