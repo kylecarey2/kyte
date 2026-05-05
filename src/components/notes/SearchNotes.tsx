@@ -1,4 +1,3 @@
-// import { useState } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useSearch } from "../../hooks/useSearch";
 import { File } from "../../models/File";

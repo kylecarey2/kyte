@@ -63,6 +63,10 @@ export function useSearch(debounceMs = 200) {
       if (!controller.signal.aborted && q === latestQuery.current) {
         console.error("Search failed:", err);
         setResults([]);
+        addToast("Search failed", {
+          type: "error",
+          closable: true,
+        });
       }
     } finally {
       if (!controller.signal.aborted && q === latestQuery.current) {
@@ -122,8 +126,21 @@ export function useSearchRebuild() {
 
   const rebuild = useCallback(async () => {
     setIsRebuilding(true);
-    await invoke("rebuild_search_index");
+    try {
+      await invoke("rebuild_search_index");
+    } catch (err) {
+      console.error("Rebuild failed:", err);
+      addToast("Failed to rebuild search index", {
+        type: "error",
+        closable: true,
+      });
+    } finally {
+      setIsRebuilding(false);
+    }
   }, []);
 
   return { isRebuilding, progress, rebuild };
+}
+function addToast(arg0: string, arg1: { type: string; closable: boolean }) {
+  throw new Error("Function not implemented.");
 }

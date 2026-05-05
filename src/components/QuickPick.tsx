@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import { File } from "../models/File";
+import { useToast } from "./toast/ToastProvider";
 
 interface QuickPickProps {
   close: () => void;
@@ -17,6 +18,8 @@ function QuickPick({ close, onFileSelected }: QuickPickProps) {
   const [offset, setOffset] = useState<number>(0);
   const shownNumber = 5;
 
+  const { addToast } = useToast();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -26,6 +29,10 @@ function QuickPick({ close, onFileSelected }: QuickPickProps) {
         setFiles(result);
       } catch (error) {
         console.error("Error reading files:", error);
+        addToast("Failed to load files", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 

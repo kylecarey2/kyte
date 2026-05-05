@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import { File } from "../../models/File";
 import { FolderNode } from "../../models/FolderNode";
+import { useToast } from "../toast/ToastProvider";
 
 interface NewNoteProps {
   close: () => void;
@@ -31,6 +32,8 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
   const [offset, setOffset] = useState<number>(0);
   const shownNumber = 5;
 
+  const { addToast } = useToast();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -38,6 +41,10 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
         setRootFolder(root);
       } catch (error) {
         console.error(error);
+        addToast("Failed to load folder tree", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 
@@ -113,6 +120,10 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       close();
     } catch (error) {
       console.error(error);
+      addToast("Failed to create file", {
+        type: "error",
+        closable: true,
+      });
     }
   };
 

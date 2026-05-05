@@ -3,6 +3,7 @@ import ConfirmDelete from "./ConfirmDelete";
 import NewFolder from "./NewFolder";
 import { invoke } from "@tauri-apps/api/core";
 import { FolderNode } from "../../models/FolderNode";
+import { useToast } from "../toast/ToastProvider";
 
 type DisplayMode = "main" | "new-folder" | "confirm-delete";
 
@@ -34,6 +35,8 @@ function FolderControl({ close }: FolderControlProps) {
   const shownNumber = 5;
   const [newSelected, setNewSelected] = useState<boolean>(true);
 
+  const { addToast } = useToast();
+
   // Fetch the tree
   useEffect(() => {
     const fetchData = async () => {
@@ -47,6 +50,10 @@ function FolderControl({ close }: FolderControlProps) {
         }
       } catch (error) {
         console.error(error);
+        addToast("Failed to load folder tree", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 

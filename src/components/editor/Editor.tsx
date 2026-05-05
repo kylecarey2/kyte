@@ -13,6 +13,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { File } from "../../models/File";
 import "./Editor.overrides.css";
+import { useToast } from "../toast/ToastProvider";
 
 interface EditorProps {
   file: File | null;
@@ -23,6 +24,8 @@ function Editor({ file }: EditorProps) {
   const editor = useRef<MDXEditorMethods>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isUnsaved, setIsUnsaved] = useState(false);
+
+  const { addToast } = useToast();
 
   const path = file?.path ?? "tmp.md";
 
@@ -38,6 +41,10 @@ function Editor({ file }: EditorProps) {
         setIsUnsaved(false);
       } catch (error) {
         console.error("Error reading file:", error);
+        addToast("Failed to load file", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 
@@ -74,6 +81,10 @@ function Editor({ file }: EditorProps) {
           setIsUnsaved(false);
         } catch (error) {
           console.error("Error writing file:", error);
+          addToast("Failed to save file", {
+            type: "error",
+            closable: true,
+          });
         }
       }, 1500);
     },

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { File } from "../../models/File";
 import { FileNode } from "../../models/FileNode";
 import TreeNode from "./TreeNode";
+import { useToast } from "../toast/ToastProvider";
 
 interface FileExplorerProps {
   onFileSelected: (file: File) => void;
@@ -14,6 +15,8 @@ function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const { addToast } = useToast();
+
   const fetchTree = async () => {
     try {
       const tree = await invoke<FileNode>("get_file_tree");
@@ -22,12 +25,21 @@ function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
     } catch (err) {
       console.error("Failed to load file tree:", err);
       setError("Failed to load file tree");
+      addToast("Failed to load file tree", {
+        type: "error",
+        closable: true,
+      });
     }
   };
 
   useEffect(() => {
     fetchTree();
-    invoke("watch_folder").catch(console.error);
+    invoke("watch_folder").catch(() => {
+      addToast("Failed to create file watcher", {
+        type: "error",
+        closable: true,
+      });
+    });
 
     let unlisten: () => void;
     let debounceTimer: number;

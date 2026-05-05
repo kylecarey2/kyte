@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { File } from "../../models/File";
 import { invoke } from "@tauri-apps/api/core";
+import { useToast } from "../toast/ToastProvider";
 
 interface DeleteNoteProps {
   close: () => void;
@@ -12,6 +13,8 @@ function DeleteNote({ close, onFileDeleted, currentFile }: DeleteNoteProps) {
   const fileName = currentFile?.name ?? "this file";
   const [confirmSelected, setConfirmSelected] = useState(false);
   const thisRef = useRef<HTMLDivElement>(null);
+
+  const { addToast } = useToast();
 
   useEffect(() => {
     thisRef.current?.focus();
@@ -25,6 +28,10 @@ function DeleteNote({ close, onFileDeleted, currentFile }: DeleteNoteProps) {
         close();
       } catch (error) {
         console.error(error);
+        addToast("Failed to delete file", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 

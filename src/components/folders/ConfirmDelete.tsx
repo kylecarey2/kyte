@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useToast } from "../toast/ToastProvider";
 
 interface ConfirmDeleteProps {
   close: () => void;
@@ -18,6 +19,8 @@ function ConfirmDelete({
   const [confirmSelected, setConfirmSelected] = useState(false);
   const thisRef = useRef<HTMLDivElement>(null);
 
+  const { addToast } = useToast();
+
   useEffect(() => {
     thisRef.current?.focus();
   }, []);
@@ -32,6 +35,10 @@ function ConfirmDelete({
         close();
       } catch (error) {
         console.error(error);
+        addToast("Failed to delete folder", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 

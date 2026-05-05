@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useState, useRef, useEffect } from "react";
+import { useToast } from "../toast/ToastProvider";
 
 interface NewFolderProps {
   close: () => void;
@@ -10,6 +11,8 @@ interface NewFolderProps {
 function NewFolder({ close, folder, cancel }: NewFolderProps) {
   const [folderName, setFolderName] = useState("");
   const folderNameRef = useRef<HTMLInputElement>(null);
+
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (folderNameRef.current) {
@@ -27,6 +30,10 @@ function NewFolder({ close, folder, cancel }: NewFolderProps) {
       });
     } catch (error) {
       console.error(error);
+      addToast("Failed to create folder", {
+        type: "error",
+        closable: true,
+      });
       return;
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { File } from "../../models/File";
 import { invoke } from "@tauri-apps/api/core";
+import { useToast } from "../toast/ToastProvider";
 
 interface RenameNoteProps {
   close: () => void;
@@ -11,6 +12,8 @@ interface RenameNoteProps {
 function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
   const [newName, setNewName] = useState(currentFile?.name ?? "");
   const renameRef = useRef<HTMLInputElement>(null);
+
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (renameRef.current) {
@@ -33,6 +36,10 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
         close();
       } catch (error) {
         console.error(error);
+        addToast("Failed to rename file", {
+          type: "error",
+          closable: true,
+        });
       }
     };
 
