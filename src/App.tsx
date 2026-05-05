@@ -11,6 +11,7 @@ import FolderControl from "./components/folders/FolderControl";
 import FileExplorer from "./components/explorer/FileExplorer";
 import RenameNote from "./components/notes/RenameNote";
 import SearchNotes from "./components/notes/SearchNotes";
+import { useHistory } from "./hooks/useHistory";
 
 type ModalType =
   | "quickPick"
@@ -29,7 +30,7 @@ function App() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [openExplorer, setOpenExplorer] = useState(false);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { currentFile, prev, next, open } = useHistory();
 
   const minimize = () => appWindow.minimize();
   const close = () => appWindow.close();
@@ -106,6 +107,12 @@ function App() {
         setActiveModal((prev) =>
           prev === "searchNotes" ? null : "searchNotes",
         );
+      } else if (e.shiftKey && key === "tab") {
+        e.preventDefault();
+        prev();
+      } else if (!e.shiftKey && key === "tab") {
+        e.preventDefault();
+        next();
       }
 
       // Disable native keybinds
@@ -135,7 +142,7 @@ function App() {
           Kyte
         </span>
         <span data-tauri-drag-region className="text-text-muted select-none">
-          {selectedFile?.name ?? ""}
+          {currentFile?.name ?? ""}
         </span>
         <div className="flex flex-row">
           <svg
@@ -172,20 +179,20 @@ function App() {
         {activeModal === "quickPick" && (
           <QuickPick
             close={closeModal}
-            onFileSelected={(file: File) => setSelectedFile(file)}
+            onFileSelected={(file: File) => open(file)}
           />
         )}
         {activeModal === "newNote" && (
           <NewNote
             close={closeModal}
-            onFileCreated={(file: File) => setSelectedFile(file)}
+            onFileCreated={(file: File) => open(file)}
           />
         )}
         {activeModal === "deleteNote" && (
           <DeleteNote
             close={closeModal}
-            onFileDeleted={() => setSelectedFile(null)}
-            currentFile={selectedFile!}
+            onFileDeleted={() => open(null)}
+            currentFile={currentFile!}
           />
         )}
         {activeModal === "folderControl" && (
@@ -194,14 +201,14 @@ function App() {
         {activeModal === "renameNote" && (
           <RenameNote
             close={closeModal}
-            currentFile={selectedFile}
-            onFileRenamed={(file: File) => setSelectedFile(file)}
+            currentFile={currentFile}
+            onFileRenamed={(file: File) => open(file)}
           />
         )}
         {activeModal === "searchNotes" && (
           <SearchNotes
             close={closeModal}
-            onFileSelected={(file: File) => setSelectedFile(file)}
+            onFileSelected={(file: File) => open(file)}
           />
         )}
       </Modal>
@@ -209,13 +216,13 @@ function App() {
       <div className="flex-1 flex flex-row relative min-h-0 overflow-hidden">
         {openExplorer && (
           <FileExplorer
-            onFileSelected={(file: File) => setSelectedFile(file)}
-            currentFile={selectedFile!}
+            onFileSelected={(file: File) => open(file)}
+            currentFile={currentFile!}
           />
         )}
-        {selectedFile ? (
+        {currentFile ? (
           <div className="flex-1 min-w-0 overflow-hidden relative h-full">
-            <Editor file={selectedFile} />
+            <Editor file={currentFile} />
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center mb-10 select-none cursor-default">

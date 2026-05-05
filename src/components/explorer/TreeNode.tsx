@@ -24,6 +24,7 @@ function TreeNode({
       setIsOpen((prev) => !prev);
     } else {
       // Pass information up
+      if (node.path === currentFile?.path) return;
       onFileSelected({ name: node.name, path: node.path });
     }
   };
