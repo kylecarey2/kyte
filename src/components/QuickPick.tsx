@@ -181,7 +181,7 @@ function QuickPick({ close, onFileSelected }: QuickPickProps) {
         )}
       </ul>
       <div className="flex flex-row justify-end">
-        <p className="text-slate-600 my-0">
+        <p className="text-text-muted my-0">
           [
           {shownNumber < filteredFiles.length
             ? shownNumber + offset

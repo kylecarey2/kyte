@@ -30,6 +30,7 @@ function SearchNotes({ onFileSelected, close }: SearchNotesProps) {
 
   const handleFileSelect = (file: File, index: number) => {
     setHighlightedIndex(index);
+    file.name = file.path.split("/").pop()?.toString() ?? file.name; // standardize to filename as name for now *until i decide to use tantivy as one source of truth*
     console.log(file);
     onFileSelected(file);
     close();
