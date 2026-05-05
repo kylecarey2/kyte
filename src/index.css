@@ -63,7 +63,7 @@
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: var(--color-text-secondary);
+  background: var(--color-border);
   border-radius: 2px 2px 2px 2px;
 }
 
@@ -73,8 +73,9 @@
 }
 
 ::spelling-error {
-  text-decoration: var(--color-text-muted) underline wavy 1px;
-  text-underline-offset: 2px;
+  /*text-decoration: var(--color-text-muted) underline wavy 1px;
+  text-underline-offset: 2px;*/
+  text-decoration: none;
 }
 
 .font-cascadia {
