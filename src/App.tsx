@@ -30,7 +30,7 @@ function App() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [openExplorer, setOpenExplorer] = useState(false);
 
-  const { currentFile, prev, next, open } = useHistory();
+  const { currentFile, prev, next, open, toggle } = useHistory();
 
   const minimize = () => appWindow.minimize();
   const close = () => appWindow.close();
@@ -113,6 +113,9 @@ function App() {
       } else if (!e.shiftKey && key === "tab") {
         e.preventDefault();
         next();
+      } else if (key === "t") {
+        e.preventDefault();
+        toggle();
       }
 
       // Disable native keybinds

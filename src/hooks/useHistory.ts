@@ -6,10 +6,12 @@ export function useHistory() {
     history: File[];
     currentIdx: number;
     currentFile: File | null;
+    toggleForward: boolean;
   }>({
     history: [],
     currentIdx: -1,
     currentFile: null,
+    toggleForward: false,
   });
 
   // Open a file, adding it to history if it's not already present
@@ -31,6 +33,7 @@ export function useHistory() {
         history: nextHistory,
         currentIdx: nextHistory.length - 1,
         currentFile: file,
+        toggleForward: false,
       };
     });
   };
@@ -45,6 +48,7 @@ export function useHistory() {
         ...prev,
         currentIdx: newIdx,
         currentFile: prev.history[newIdx],
+        toggleForward: false,
       };
     });
   };
@@ -59,7 +63,35 @@ export function useHistory() {
         ...prev,
         currentIdx: newIdx,
         currentFile: prev.history[newIdx],
+        toggleForward: false,
       };
+    });
+  };
+
+  // Toggle between current and most recent file in history
+  const toggle = () => {
+    setState((prev) => {
+      if (prev.history.length === 0) return prev;
+
+      if (prev.toggleForward) {
+        const newIdx =
+          prev.currentIdx >= prev.history.length - 1 ? 0 : prev.currentIdx + 1;
+        return {
+          ...prev,
+          currentIdx: newIdx,
+          currentFile: prev.history[newIdx],
+          toggleForward: !prev.toggleForward,
+        };
+      } else {
+        const newIdx =
+          prev.currentIdx === 0 ? prev.history.length - 1 : prev.currentIdx - 1;
+        return {
+          ...prev,
+          currentIdx: newIdx,
+          currentFile: prev.history[newIdx],
+          toggleForward: !prev.toggleForward,
+        };
+      }
     });
   };
 
@@ -75,6 +107,7 @@ export function useHistory() {
         history: nextHistory,
         currentIdx: newIdx,
         currentFile: nextHistory[newIdx] ?? null,
+        toggleForward: false,
       };
     });
   };
@@ -86,6 +119,7 @@ export function useHistory() {
     open,
     prev,
     next,
+    toggle,
     close,
   };
 }
