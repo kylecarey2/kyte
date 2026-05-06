@@ -137,7 +137,7 @@ export function useHistory() {
       const nextHistory = prev.history.filter((f) => !f.path.startsWith(path));
 
       // Currently on the deleted file, move to previous file
-      if (prev.currentFile!.path.startsWith(path)) {
+      if (prev.currentFile?.path.startsWith(path)) {
         const newIdx =
           nextHistory.length === 0 ? -1 : Math.max(0, prev.currentIdx - 1);
 
