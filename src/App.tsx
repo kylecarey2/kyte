@@ -150,9 +150,11 @@ function App() {
       // Disable native keybinds
       if (e.shiftKey && key === "i") {
         e.preventDefault(); // Inspect element
-      }
-
-      if (key === "F5") {
+      } else if (key === "r") {
+        e.preventDefault();
+      } else if (key === "j") {
+        e.preventDefault();
+      } else if (key === "f5") {
         e.preventDefault();
       }
     };

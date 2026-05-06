@@ -259,7 +259,7 @@ function FolderControl({ close, pathDeleted }: FolderControlProps) {
                       {dir.path !== "" && (
                         <span
                           className={`w-4.75 flex items-center justify-center ${
-                            dir.hasChildren ? "text-primary" : "text-secondary"
+                            dir.hasChildren ? "text-primary" : "text-text"
                           }`}
                         >
                           {dir.hasChildren ? (
@@ -275,7 +275,7 @@ function FolderControl({ close, pathDeleted }: FolderControlProps) {
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                                  d="M5 12h14"
                                 />
                               </svg>
                             ) : (
@@ -290,7 +290,7 @@ function FolderControl({ close, pathDeleted }: FolderControlProps) {
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                                  d="M12 4.5v15m7.5-7.5h-15"
                                 />
                               </svg>
                             )

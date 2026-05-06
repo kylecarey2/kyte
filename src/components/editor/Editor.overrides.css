@@ -19,7 +19,20 @@
 .mdxeditor,
 .mdxeditor * {
   font-family: "Cascadia Mono", monospace;
-  color: var(--color-text);
+  color: var(--color-text-secondary);
+}
+
+.mdxeditor h1,
+.mdxeditor h2,
+.mdxeditor h3,
+.mdxeditor h4,
+.mdxeditor h5,
+.mdxeditor h6 {
+  color: var(--color-text) !important;
+}
+
+.mdxeditor strong {
+  color: var(--color-text) !important;
 }
 
 .mdxeditor hr.selected {
