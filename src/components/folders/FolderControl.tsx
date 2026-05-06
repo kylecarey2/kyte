@@ -17,9 +17,10 @@ interface VisibleNode {
 
 interface FolderControlProps {
   close: () => void;
+  pathDeleted: (path: string) => void;
 }
 
-function FolderControl({ close }: FolderControlProps) {
+function FolderControl({ close, pathDeleted }: FolderControlProps) {
   const [mode, setMode] = useState<DisplayMode>("main");
   const [rootFolder, setRootFolder] = useState<FolderNode | null>(null);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
@@ -404,7 +405,7 @@ function FolderControl({ close }: FolderControlProps) {
         cancel={() => setMode("main")}
         close={close}
         onFolderDeleted={() => {
-          // We could refetch data here if required
+          pathDeleted(selectedFolder!);
         }}
         folderName={selectedFolder!}
       />

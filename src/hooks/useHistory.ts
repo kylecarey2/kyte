@@ -112,6 +112,55 @@ export function useHistory() {
     });
   };
 
+  const remove = (file: File) => {
+    setState((prev) => {
+      // Remove the file from history
+      const nextHistory = prev.history.filter(
+        (f) => f.name !== file.name || f.path !== file.path,
+      );
+
+      // Go to the previous file if the current file was deleted
+      const newIdx =
+        nextHistory.length === 0 ? -1 : Math.max(0, prev.currentIdx - 1);
+      return {
+        history: nextHistory,
+        currentIdx: newIdx,
+        currentFile: nextHistory[newIdx] ?? null,
+        toggleForward: false,
+      };
+    });
+  };
+
+  const removeByPath = (path: string) => {
+    setState((prev) => {
+      // Remove the file from history
+      const nextHistory = prev.history.filter((f) => !f.path.startsWith(path));
+
+      // Currently on the deleted file, move to previous file
+      if (prev.currentFile!.path.startsWith(path)) {
+        const newIdx =
+          nextHistory.length === 0 ? -1 : Math.max(0, prev.currentIdx - 1);
+
+        return {
+          history: nextHistory,
+          currentIdx: newIdx,
+          currentFile: nextHistory[newIdx] ?? null,
+          toggleForward: false,
+        };
+      }
+
+      // Not on the deleted file, adjust index based on length difference
+      const lengthDifference = prev.history.length - nextHistory.length;
+
+      return {
+        ...prev,
+        history: nextHistory,
+        currentIdx: prev.currentIdx - lengthDifference,
+        currentFile: nextHistory[prev.currentIdx - lengthDifference] ?? null,
+      };
+    });
+  };
+
   return {
     history: state.history,
     currentIdx: state.currentIdx,
@@ -121,5 +170,7 @@ export function useHistory() {
     next,
     toggle,
     close,
+    remove,
+    removeByPath,
   };
 }

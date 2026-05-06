@@ -30,7 +30,8 @@ function App() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [openExplorer, setOpenExplorer] = useState(false);
 
-  const { currentFile, prev, next, open, toggle } = useHistory();
+  const { currentFile, prev, next, open, toggle, remove, removeByPath } =
+    useHistory();
 
   const minimize = () => appWindow.minimize();
   const close = () => appWindow.close();
@@ -49,14 +50,16 @@ function App() {
 
     const setupListeners = async () => {
       unlistenBlur = await appWindow.listen("tauri://blur", () => {
-        if (debounceTimeoutRef.current)
+        if (debounceTimeoutRef.current) {
           clearTimeout(debounceTimeoutRef.current);
+        }
         debounceTimeoutRef.current = setTimeout(() => setFocused(false), 100);
       });
 
       unlistenFocus = await appWindow.listen("tauri://focus", () => {
-        if (debounceTimeoutRef.current)
+        if (debounceTimeoutRef.current) {
           clearTimeout(debounceTimeoutRef.current);
+        }
         setFocused(true);
       });
     };
@@ -194,12 +197,15 @@ function App() {
         {activeModal === "deleteNote" && (
           <DeleteNote
             close={closeModal}
-            onFileDeleted={() => open(null)}
+            onFileDeleted={() => remove(currentFile!)}
             currentFile={currentFile!}
           />
         )}
         {activeModal === "folderControl" && (
-          <FolderControl close={closeModal} />
+          <FolderControl
+            close={closeModal}
+            pathDeleted={(path: string) => removeByPath(path)}
+          />
         )}
         {activeModal === "renameNote" && (
           <RenameNote
