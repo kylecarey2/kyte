@@ -12,6 +12,7 @@ import FileExplorer from "./components/explorer/FileExplorer";
 import RenameNote from "./components/notes/RenameNote";
 import SearchNotes from "./components/notes/SearchNotes";
 import { useHistory } from "./hooks/useHistory";
+import { useToast } from "./components/toast/ToastProvider";
 
 type ModalType =
   | "quickPick"
@@ -30,12 +31,34 @@ function App() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [openExplorer, setOpenExplorer] = useState(false);
 
-  const { currentFile, prev, next, open, toggle, remove, removeByPath } =
+  const { currentFile, prev, next, open, toggle, remove, removeByPath, reset } =
     useHistory();
+
+  const { addToast, removeAllToasts } = useToast();
 
   const minimize = () => appWindow.minimize();
   const close = () => appWindow.close();
   const closeModal = () => setActiveModal(null);
+  const resetWorkspace = () => {
+    setOpenExplorer(false);
+    setActiveModal(null);
+    try {
+      reset();
+      removeAllToasts();
+
+      addToast("Successfully reset workspace", {
+        type: "success",
+        duration: 3000,
+        closable: true,
+      });
+    } catch (e) {
+      console.error(e);
+      addToast("Failed to reset workspace", {
+        type: "error",
+        closable: true,
+      });
+    }
+  };
 
   // Disable context menu
   useEffect(() => {
@@ -78,6 +101,9 @@ function App() {
       if (e.key === "Escape") {
         setActiveModal(null);
         return;
+      } else if (e.key === "F2") {
+        e.preventDefault();
+        setActiveModal((prev) => (prev === "renameNote" ? null : "renameNote"));
       }
 
       const isModifierKey = e.ctrlKey || e.metaKey;
@@ -85,7 +111,7 @@ function App() {
 
       const key = e.key.toLowerCase();
 
-      if (e.shiftKey && key === "n") {
+      if (key === "m") {
         e.preventDefault();
         setActiveModal((prev) =>
           prev === "folderControl" ? null : "folderControl",
@@ -99,9 +125,6 @@ function App() {
       } else if (e.shiftKey && key === "delete") {
         e.preventDefault();
         setActiveModal((prev) => (prev === "deleteNote" ? null : "deleteNote"));
-      } else if (key === "r") {
-        e.preventDefault();
-        setActiveModal((prev) => (prev === "renameNote" ? null : "renameNote"));
       } else if (key === "e") {
         e.preventDefault();
         setOpenExplorer((prev) => !prev);
@@ -119,6 +142,9 @@ function App() {
       } else if (key === "t") {
         e.preventDefault();
         toggle();
+      } else if (e.shiftKey && key === "r") {
+        e.preventDefault();
+        resetWorkspace();
       }
 
       // Disable native keybinds

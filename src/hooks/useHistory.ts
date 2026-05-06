@@ -161,6 +161,15 @@ export function useHistory() {
     });
   };
 
+  const reset = () => {
+    setState({
+      history: [],
+      currentIdx: -1,
+      currentFile: null,
+      toggleForward: false,
+    });
+  };
+
   return {
     history: state.history,
     currentIdx: state.currentIdx,
@@ -172,5 +181,6 @@ export function useHistory() {
     close,
     remove,
     removeByPath,
+    reset,
   };
 }

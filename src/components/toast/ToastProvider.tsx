@@ -28,6 +28,7 @@ type AddToastOptions = {
 type ToastContextValue = {
   addToast: (content: ReactNode, options?: AddToastOptions) => void;
   removeToast: (id: string) => void;
+  removeAllToasts: () => void;
 };
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
@@ -43,6 +44,11 @@ function ToastProvider({ children }: ToastProviderProps) {
   // Remove a toast by its id
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  // Remove all toasts
+  const removeAllToasts = useCallback(() => {
+    setToasts([]);
   }, []);
 
   // Add a toast with optional duration and closable flag
@@ -70,8 +76,9 @@ function ToastProvider({ children }: ToastProviderProps) {
     () => ({
       addToast,
       removeToast,
+      removeAllToasts,
     }),
-    [addToast, removeToast],
+    [addToast, removeToast, removeAllToasts],
   );
 
   return (
