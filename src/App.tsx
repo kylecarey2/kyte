@@ -172,9 +172,17 @@ function App() {
         onContextMenu={(e) => e.preventDefault()}
         className="flex flex-row justify-between items-center border-b-2 border-border relative z-51"
       >
-        <span data-tauri-drag-region className="text-text ml-2 m-0 select-none">
-          Kyte
-        </span>
+        <div
+          data-tauri-drag-region
+          className="px-2 select-none flex flex-row gap-1 items-center pointer-events-none"
+        >
+          <img
+            src="/public/kyte.svg"
+            alt="Kyte"
+            className="size-6 select-none"
+          />
+          <span className="text-text select-none">Kyte</span>
+        </div>
         <span data-tauri-drag-region className="text-text-muted select-none">
           {currentFile?.name ?? ""}
         </span>
