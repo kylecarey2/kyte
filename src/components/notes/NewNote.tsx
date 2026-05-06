@@ -118,6 +118,11 @@ function NewNote({ close, onFileCreated }: NewNoteProps) {
       const createdFileName = result.substring(result.lastIndexOf("/") + 1);
       onFileCreated({ name: createdFileName, path: result });
       close();
+      addToast(`Successfully created '${createdFileName}'`, {
+        type: "success",
+        duration: 3000,
+        closable: true,
+      });
     } catch (error) {
       console.error(error);
       addToast("Failed to create file", {

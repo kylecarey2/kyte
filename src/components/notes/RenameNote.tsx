@@ -34,6 +34,14 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
         );
         onFileRenamed({ name: createdFileName, path: new_path });
         close();
+        addToast(
+          `Successfully renamed ${currentFile?.name} to '${createdFileName}'`,
+          {
+            type: "success",
+            duration: 3000,
+            closable: true,
+          },
+        );
       } catch (error) {
         console.error(error);
         addToast("Failed to rename file", {

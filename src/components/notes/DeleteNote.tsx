@@ -26,6 +26,11 @@ function DeleteNote({ close, onFileDeleted, currentFile }: DeleteNoteProps) {
         await invoke("delete_file", { path: currentFile?.path ?? "" });
         onFileDeleted();
         close();
+        addToast(`Successfully deleted '${fileName}'`, {
+          type: "success",
+          duration: 3000,
+          closable: true,
+        });
       } catch (error) {
         console.error(error);
         addToast("Failed to delete file", {

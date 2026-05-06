@@ -33,6 +33,11 @@ function ConfirmDelete({
         await invoke("delete_directory", { dirname: folderName });
         onFolderDeleted();
         close();
+        addToast(`Successfully deleted '${folder}'`, {
+          type: "success",
+          duration: 3000,
+          closable: true,
+        });
       } catch (error) {
         console.error(error);
         addToast("Failed to delete folder", {

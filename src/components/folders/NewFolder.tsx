@@ -21,12 +21,17 @@ function NewFolder({ close, folder, cancel }: NewFolderProps) {
   }, []);
 
   const handleCreate = async () => {
-    let result: string;
     try {
       if (!folderName.trim()) return;
       const cleanFolderName = folderName.trim();
-      result = await invoke("create_directory", {
+      const result = await invoke("create_directory", {
         dirname: `${folder}/${cleanFolderName}`,
+      });
+
+      addToast(`Successfully created '${result}'`, {
+        type: "success",
+        duration: 3000,
+        closable: true,
       });
     } catch (error) {
       console.error(error);
@@ -37,7 +42,6 @@ function NewFolder({ close, folder, cancel }: NewFolderProps) {
       return;
     }
 
-    console.log(result);
     close();
   };
 
