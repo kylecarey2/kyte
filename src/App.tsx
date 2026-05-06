@@ -25,6 +25,7 @@ type ModalType =
 
 function App() {
   const [focused, setFocused] = useState(true);
+  const [transparentWindow, setTransparentWindow] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appWindow = getCurrentWindow();
 
@@ -139,6 +140,9 @@ function App() {
       } else if (!e.shiftKey && key === "tab") {
         e.preventDefault();
         next();
+      } else if (e.shiftKey && key === "t") {
+        e.preventDefault();
+        setTransparentWindow((prev) => !prev);
       } else if (key === "t") {
         e.preventDefault();
         toggle();
@@ -165,7 +169,7 @@ function App() {
 
   return (
     <div
-      className={`${focused ? "bg-bg-tint" : "bg-bg"} transition-colors duration-100 flex flex-col h-screen overflow-hidden`}
+      className={`${focused && transparentWindow ? "bg-bg-tint" : "bg-bg"} transition-colors duration-100 flex flex-col h-screen overflow-hidden`}
     >
       <div
         data-tauri-drag-region

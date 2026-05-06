@@ -22,12 +22,12 @@
   color: var(--color-text-secondary);
 }
 
-.mdxeditor h1,
-.mdxeditor h2,
-.mdxeditor h3,
-.mdxeditor h4,
-.mdxeditor h5,
-.mdxeditor h6 {
+.mdxeditor h1 > *,
+.mdxeditor h2 > *,
+.mdxeditor h3 > *,
+.mdxeditor h4 > *,
+.mdxeditor h5 > *,
+.mdxeditor h6 > * {
   color: var(--color-text) !important;
 }
 
