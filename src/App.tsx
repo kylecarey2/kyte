@@ -180,11 +180,7 @@ function App() {
           data-tauri-drag-region
           className="px-2 select-none flex flex-row gap-1 items-center pointer-events-none"
         >
-          <img
-            src="/public/kyte.svg"
-            alt="Kyte"
-            className="size-6 select-none"
-          />
+          <img src="/kyte.svg" alt="Kyte" className="size-6 select-none" />
           <span className="text-text select-none">Kyte</span>
         </div>
         <span data-tauri-drag-region className="text-text-muted select-none">

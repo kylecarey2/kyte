@@ -92,41 +92,55 @@ function Editor({ file }: EditorProps) {
   );
 
   return (
-    <div className="h-full relative">
-      <MDXEditor
-        contentEditableClassName="selectableEditor"
-        className="h-full"
-        markdown={markdown}
-        onChange={handleEditorChange}
-        ref={editor}
-        plugins={[
-          headingsPlugin(),
-          listsPlugin(),
-          quotePlugin(),
-          thematicBreakPlugin(),
-          linkPlugin(),
-          markdownShortcutPlugin(),
-        ]}
-      />
-      <div className="absolute top-0 right-2">
-        {isUnsaved && (
-          <svg
-            className="w-4 h-4 m-2 text-text-secondary"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 4V20M18 6L6 18M20 12H4M18 18L6 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <MDXEditor
+          contentEditableClassName="selectableEditor"
+          className="flex h-full min-h-0 flex-col"
+          markdown={markdown}
+          onChange={handleEditorChange}
+          ref={editor}
+          plugins={[
+            headingsPlugin(),
+            listsPlugin(),
+            quotePlugin(),
+            thematicBreakPlugin(),
+            linkPlugin(),
+            markdownShortcutPlugin(),
+          ]}
+        />
+        <div className="absolute right-2 top-0">
+          {isUnsaved && (
+            <svg
+              className="m-2 h-4 w-4 text-text-secondary"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 4V20M18 6L6 18M20 12H4M18 18L6 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </div>
       </div>
-      <div className="absolute bottom-0 right-2 mr-2"></div>
+
+      <div
+        className="flex h-8 shrink-0 items-center justify-end gap-3 border-t-2 border-border bg-transparent px-3 text-xs text-text-muted"
+        aria-label="Editor footer"
+      >
+        <span className="whitespace-nowrap">Ln 1, Col 1</span>
+        <span className="whitespace-nowrap">UTF-8</span>
+        <span className="whitespace-nowrap">Markdown</span>
+        <span className="whitespace-nowrap">{markdown.length} characters</span>
+        <span className="whitespace-nowrap">
+          {isUnsaved ? "Unsaved changes" : "All changes saved"}
+        </span>
+      </div>
     </div>
   );
 }

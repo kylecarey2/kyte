@@ -7,13 +7,16 @@
 .mdxeditor {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
   height: 100%;
 }
 
 .selectableEditor {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-top: 0;
-  height: 92vh;
 }
 
 .mdxeditor,
