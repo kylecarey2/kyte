@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { File } from "../models/File";
+import { useToast } from "../components/toast/ToastProvider";
 
 interface SearchResult {
   id: string;
@@ -14,6 +15,8 @@ export function useSearch(debounceMs = 200) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const { addToast } = useToast();
 
   // Refs to prevent race conditions
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -103,6 +106,8 @@ export function useSearchRebuild() {
   } | null>(null);
   const [isRebuilding, setIsRebuilding] = useState(false);
 
+  const { addToast } = useToast();
+
   useEffect(() => {
     let unlistenProgress: (() => void) | undefined;
     let unlistenComplete: (() => void) | undefined;
@@ -128,6 +133,11 @@ export function useSearchRebuild() {
     setIsRebuilding(true);
     try {
       await invoke("rebuild_search_index");
+      addToast("Successfully rebuilt note index", {
+        type: "success",
+        duration: 3000,
+        closable: true,
+      });
     } catch (err) {
       console.error("Rebuild failed:", err);
       addToast("Failed to rebuild search index", {
@@ -140,7 +150,4 @@ export function useSearchRebuild() {
   }, []);
 
   return { isRebuilding, progress, rebuild };
-}
-function addToast(arg0: string, arg1: { type: string; closable: boolean }) {
-  throw new Error("Function not implemented.");
 }

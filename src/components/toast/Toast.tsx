@@ -93,7 +93,7 @@ function Toast({
 
   return (
     <div
-      className={`bg-bg shadow-md border-2 border-border text-text-secondary p-2 rounded flex flex-row items-center gap-2 max-w-lg min-w-sm transition-opacity duration-200 ${isClosing ? "opacity-0" : "opacity-100"}`}
+      className={`bg-bg drop-shadow-sm shadow-lg border-2 border-border text-text-secondary p-2 rounded flex flex-row items-center gap-2 max-w-lg min-w-sm transition-opacity duration-200 ${isClosing ? "opacity-0" : "opacity-100"}`}
     >
       {toastIcon()}
       <div className="flex-1">{children}</div>
