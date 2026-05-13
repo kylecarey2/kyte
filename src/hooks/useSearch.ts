@@ -42,7 +42,6 @@ export function useSearch(debounceMs = 200) {
 
     setLoading(true);
     try {
-      console.log("Searching for:", q);
       const res = await invoke<SearchResult[]>("search_notes", {
         query: q,
         limit: 20,

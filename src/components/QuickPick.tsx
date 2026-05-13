@@ -110,7 +110,6 @@ function QuickPick({ close, onFileSelected }: QuickPickProps) {
       e.preventDefault();
       const file = filteredFiles[absoluteIndex];
       if (file) {
-        console.log("BACKEND GETS CALLED BY ENTER / SPACE", file);
         handleFileSelect(file, highlightedIndex);
       }
     }

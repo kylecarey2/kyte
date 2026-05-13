@@ -56,6 +56,161 @@ fn get_index_dir(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(path)
 }
 
+const WELCOME_NOTE_FILENAME: &str = "Kyte-Welcome.md";
+const WELCOME_NOTE_MARKER_FILENAME: &str = ".welcome_initialized";
+
+fn welcome_note_content() -> &'static str {
+    r#"# Welcome to Kyte
+
+Kyte is a lightweight, fast Markdown editor built for focus and flow.
+
+I originally built Kyte because I was frustrated with modern note apps becoming bloated (seriously-why does a notes app need Copilot?). Kyte keeps things simple: your notes are plain Markdown files, stored locally, and easy to organize.
+
+---
+
+## What you can do
+
+- Live Markdown editing
+- Fast file navigation
+- Keyboard-first workflows
+- Local notes with no lock-in
+
+### Build Interactive Tasklists
+
+- [x] Build a search engine from scratch ([kygle.xyz](https://kygle.xyz))
+- [x] Relieve my notetaking frustrations (Kyte)
+- [ ] Create the next Ky-_X_ 👀
+
+---
+
+## Good to know
+
+1. To open links in the editor, use **Ctrl + Click**.
+2. Some whitespace behavior follows the Markdown spec, so spacing may render differently than plain text editors.
+3. Your notes are stored in `%appdata%/com.kyte.app/notes`
+
+---
+
+## Keybinds
+
+### Notes & folders
+
+- New note - **Ctrl+N**
+- Delete note — **Ctrl+Shift+Del**
+- Rename note — **F2**
+- Quick open note — **Ctrl+P**
+- Open folder editor — **Ctrl+M**
+
+### Navigation
+
+- Toggle file explorer — **Ctrl+E**
+- Search all notes — **Ctrl+Shift+F**
+- Next note — **Ctrl+Tab**
+- Previous note — **Ctrl+Shift+Tab**
+- Toggle notes — **Ctrl+T**
+
+### Miscellaneous
+
+- Refresh workspace — **Ctrl+Shift+R**
+- Toggle transparency — **Ctrl+Shift+T**
+- Open this Help file — **Ctrl+H**
+
+> Keyboard navigation also works across lists and picker menus.
+
+---
+
+## Quick Markdown shortcuts
+
+Use these to get started quickly:
+
+- `# Heading 1`
+- `## Heading 2`
+- `### Heading 3`
+- `**bold**`
+- `*italic*`
+- `- bullet list item`
+- `1. numbered list item`
+- `[Link text](https://example.com)`
+- `` `inline code` ``
+- `---` (horizontal rule)
+- `> blockquote`
+- `- [ ] task item`
+- `- [x] completed task`
+
+For more, see the full [Markdown specification](https://www.markdownguide.org/basic-syntax/).
+
+---
+
+## About Kyte
+
+Kyte is built with [Tauri](https://v2.tauri.app/) (Rust backend) and React frontend for a fast, native-feeling desktop experience.
+
+Kyte uses a native Rust-based inverted index. Even with thousands of notes, **Ctrl+Shift+F** search results are near-instant (\<15ms).
+
+Read more:
+
+- Project page: [kylecarey.com/projects/kyte](https://kylecarey.com/projects/kyte)
+- Source code: [github.com/kylecarey2/kyte](https://github.com/kylecarey2/kyte)
+
+---
+
+## Final thoughts
+
+You can reopen this file anytime with **Ctrl+H**.
+
+If you run into issues, open an issue on GitHub. If you want to customize Kyte, feel free to fork it and make it your own.
+
+Hope you enjoy it 🤙
+"#
+}
+
+fn create_welcome_note_if_missing(app: &AppHandle) -> Result<(String, bool), String> {
+    let notes_dir = get_base_dir(app)?;
+    let relative_path = WELCOME_NOTE_FILENAME.to_string();
+    let welcome_path = notes_dir.join(&relative_path);
+
+    if welcome_path.exists() {
+        return Ok((relative_path, false));
+    }
+
+    fs::write(&welcome_path, welcome_note_content()).map_err(|e| e.to_string())?;
+    Ok((relative_path, true))
+}
+
+fn ensure_welcome_note_once(app: &AppHandle) -> Result<(), String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+
+    if !app_data_dir.exists() {
+        fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
+    }
+
+    let marker_path = app_data_dir.join(WELCOME_NOTE_MARKER_FILENAME);
+
+    // Only run once for this app data directory.
+    if marker_path.exists() {
+        return Ok(());
+    }
+
+    let _ = create_welcome_note_if_missing(app)?;
+
+    fs::write(marker_path, "initialized").map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn open_help_note(app: AppHandle) -> Result<File, String> {
+    let (relative_path, created) = create_welcome_note_if_missing(&app)?;
+
+    if created {
+        let _ = index_by_path(&app, &relative_path);
+    }
+
+    Ok(File {
+        path: relative_path,
+        name: WELCOME_NOTE_FILENAME.to_string(),
+    })
+}
+
 fn sanitize_relative(input: &str) -> String {
     let s = input.trim().replace("\\", "/");
     s.trim_start_matches('/')
@@ -187,11 +342,26 @@ fn create_file(app: AppHandle, filename: &str) -> Result<String, String> {
         return Err(format!("File '{}' already exists", resolved_name));
     }
 
-    let nice_filename = &filename[filename
+    let title = &filename[filename
         .rfind(|c| c == '/' || c == '\\')
         .map_or(0, |i| i + 1)..];
 
-    let content = format!("# {}", nice_filename.trim());
+    let capitalized = title
+        .trim()
+        .split_whitespace()
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                Some(first) => {
+                    first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+                }
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    let content = format!("# {}", capitalized);
     fs::write(&full_path, content).map_err(|e| e.to_string())?;
 
     // Auto-index new file
@@ -532,12 +702,16 @@ pub fn run() {
             // search
             search_notes,
             rebuild_search_index,
+            open_help_note,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+
+            // Create the welcome note only on first launch.
+            ensure_welcome_note_once(app.handle())?;
 
             // Initialize search index
             let index_dir = get_index_dir(app.handle())?;

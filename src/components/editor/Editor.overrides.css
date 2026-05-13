@@ -9,7 +9,6 @@
   flex-direction: column;
   min-height: 0;
   overflow-y: auto;
-  height: 100%;
 }
 
 .selectableEditor {
@@ -17,6 +16,15 @@
   min-height: 0;
   overflow-y: auto;
   padding-top: 0;
+  height: 100%;
+}
+
+.mdxeditor-root-contenteditable {
+  height: 100%;
+}
+
+.mdxeditor-root-contenteditable > div {
+  height: 100%;
 }
 
 .mdxeditor,

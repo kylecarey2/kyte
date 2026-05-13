@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState } from "react";
 import Editor from "./components/editor/Editor";
@@ -149,6 +150,17 @@ function App() {
       } else if (e.shiftKey && key === "r") {
         e.preventDefault();
         resetWorkspace();
+      } else if (key === "h") {
+        e.preventDefault();
+        invoke<File>("open_help_note")
+          .then((file) => open(file))
+          .catch((error) => {
+            console.error("Error opening help note:", error);
+            addToast("Failed to open help note", {
+              type: "error",
+              closable: true,
+            });
+          });
       }
 
       // Disable native keybinds

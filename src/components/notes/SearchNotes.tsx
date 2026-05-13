@@ -30,7 +30,6 @@ function SearchNotes({ onFileSelected, close }: SearchNotesProps) {
   const handleFileSelect = (file: File, index: number) => {
     setHighlightedIndex(index);
     file.name = file.path.split("/").pop()?.toString() ?? file.name; // standardize to filename as name for now *until i decide to use tantivy as one source of truth*
-    console.log(file);
     onFileSelected(file);
     close();
   };
@@ -86,7 +85,6 @@ function SearchNotes({ onFileSelected, close }: SearchNotesProps) {
       e.preventDefault();
       const file = results[absoluteIndex];
       if (file) {
-        console.log("BACKEND GETS CALLED BY ENTER / SPACE", file);
         handleFileSelect(file, highlightedIndex);
       }
     }

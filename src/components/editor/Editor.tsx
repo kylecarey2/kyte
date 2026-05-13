@@ -67,7 +67,6 @@ function Editor({ file }: EditorProps) {
         const result: string = await invoke("read_file", {
           filename: path,
         });
-        console.log(result);
         setMarkdown(result);
         editor.current?.setMarkdown(result);
         setIsUnsaved(false);
@@ -109,7 +108,6 @@ function Editor({ file }: EditorProps) {
             filename: path,
             content: newContent,
           });
-          console.log("File saved automatically!");
           setIsUnsaved(false);
         } catch (error) {
           console.error("Error writing file:", error);
@@ -125,10 +123,7 @@ function Editor({ file }: EditorProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div
-        className="relative min-h-0 flex-1 overflow-hidden cursor-text"
-        onClick={() => editor.current?.focus()}
-      >
+      <div className="relative min-h-0 flex-1 overflow-hidden cursor-text">
         <MDXEditor
           contentEditableClassName="selectableEditor"
           className="flex h-full min-h-0 flex-col"

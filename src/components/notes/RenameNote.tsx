@@ -78,7 +78,8 @@ function RenameNote({ close, currentFile, onFileRenamed }: RenameNoteProps) {
       ></input>
       <div className="flex flex-row justify-between items-center">
         <span className="mr-2">
-          {currentFile?.name} &gt; {newName}
+          {currentFile?.name} &gt;{" "}
+          <span className="text-text-secondary">{newName}</span>
         </span>
         <button
           className="bg-transparent text-text font-cascadia p-2 border-2 border-primary cursor-pointer hover:bg-hover rounded"
