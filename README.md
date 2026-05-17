@@ -6,7 +6,11 @@ Kyte keeps your notes local, plain-text, and easy to manage while still feeling 
 
 # Installation
 
-You can download the latest release from the [Releases](https://github.com/kylecarey/kyte/releases) page. This release is currently only available for Windows (x64) with plans for macOS and Linux in the future.
+You can download the latest release from the [Releases](https://github.com/kylecarey2/kyte/releases) page. This release is currently only available for Windows (x64) with plans for macOS and Linux in the future.
+
+# Demo
+
+![Live Demo](/public/kyte-demo.webp)
 
 # Features
 
@@ -16,35 +20,19 @@ You can download the latest release from the [Releases](https://github.com/kylec
 - Keyboard-first workflows with extensive shortcuts
 - Distraction free UI
 
-# Keybinds
+# Screenshots
 
-## Notes & folders
+![Main View](/public/main.png)
 
-- New note - **Ctrl+N**
-- Delete note - **Ctrl+Shift+Del**
-- Rename note - **F2**
-- Quick open note - **Ctrl+P**
-- Open folder editor - **Ctrl+M**
+![No Explorer](/public/no-explorer.png)
 
-## Navigation
-
-- Toggle file explorer - **Ctrl+E**
-- Search all notes - **Ctrl+Shift+F**
-- Next note - **Ctrl+Tab**
-- Previous note - **Ctrl+Shift+Tab**
-- Toggle notes - **Ctrl+T**
-
-## Miscellaneous
-
-- Refresh workspace - **Ctrl+Shift+R**
-- Toggle transparency - **Ctrl+Shift+T**
-- Open help note - **Ctrl+H**
+![Add Note](/public/add-note.png)
 
 # How it Works
 
 Kyte stores notes as regular Markdown files in your local app-data notes directory. The frontend (React + TypeScript) handles editing and keyboard-driven UI, while the Tauri Rust backend manages file operations, native window behavior, and search indexing.
 
-For search, Kyte uses a Rust-based inverted index (Tantivy) so global note search stays near-instant even with large note collections. The indexing thread runs in the background to ensure that the user facing part of the app is never slowed down.
+For search, Kyte uses a Rust-based inverted index (Tantivy) so global note search stays near-instant even with large note collections. The indexing thread runs in the background to ensure that the user facing part of the app is never slowed down. Because of this, search results are always available in less than 15ms as you type.
 
 # Tech Stack
 
