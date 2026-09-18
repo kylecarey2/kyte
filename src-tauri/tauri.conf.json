@@ -16,6 +16,7 @@
         "width": 1000,
         "height": 550,
         "transparent": true,
+        "visible": false,
         "decorations": false
       }
     ],
