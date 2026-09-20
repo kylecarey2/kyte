@@ -64,6 +64,9 @@ function App() {
 
   // Disable context menu
   useEffect(() => {
+    // Open explorer automagically shortly after app loads
+    setTimeout(() => setOpenExplorer(true), 500);
+
     const handler = (e: MouseEvent) => e.preventDefault();
     window.addEventListener("contextmenu", handler);
     return () => window.removeEventListener("contextmenu", handler);
@@ -181,7 +184,7 @@ function App() {
 
   return (
     <div
-      className={`${focused && transparentWindow ? "bg-bg-tint" : "bg-bg"} transition-colors duration-100 flex flex-col h-screen overflow-hidden`}
+      className={`${focused && transparentWindow ? "bg-bg-tint" : "bg-bg"} transition-all duration-100 flex flex-col h-screen overflow-hidden`}
     >
       <div
         data-tauri-drag-region
@@ -271,23 +274,22 @@ function App() {
       </Modal>
 
       <div className="flex-1 flex flex-row relative min-h-0 overflow-hidden">
-        {openExplorer && (
+        <div
+          aria-hidden={!openExplorer}
+          className={`${openExplorer ? "w-3xs border-r-2 border-border" : "w-0"} h-full shrink-0 overflow-hidden transition-[width] duration-150 ease-out`}
+        >
           <FileExplorer
             onFileSelected={(file: File) => open(file)}
             currentFile={currentFile!}
           />
-        )}
+        </div>
         {currentFile ? (
           <div className="flex-1 min-w-0 overflow-hidden relative h-full">
             <Editor file={currentFile} />
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center mb-10 select-none cursor-default">
-            <GetStarted
-              openQuickPick={() => setActiveModal("quickPick")}
-              openNewNote={() => setActiveModal("newNote")}
-              openExplorer={() => setOpenExplorer((prev) => !prev)}
-            />
+            <GetStarted />
           </div>
         )}
       </div>

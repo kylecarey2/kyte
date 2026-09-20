@@ -60,7 +60,7 @@ function FileExplorer({ onFileSelected, currentFile }: FileExplorerProps) {
   }, []);
 
   return (
-    <div className="w-3xs shrink-0 h-full border-r-2 border-border overflow-y-auto overflow-x-hidden">
+    <div className="w-3xs shrink-0 h-full overflow-y-auto overflow-x-hidden">
       <div className="p-2.5 font-bold text-sm text-text-muted">Explorer</div>
 
       {error && <div className="p-2.5 text-text-muted">{error}</div>}
